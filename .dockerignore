@@ -1,0 +1,59 @@
+# =============================================================================
+# .dockerignore - hal-hal yang TIDAK ikut ke dalam image Docker
+# =============================================================================
+
+.git
+.gitignore
+.env
+.env.backup
+.env.production
+.env.local
+!.env.example
+
+# Dependensi (diinstal ulang saat build)
+vendor
+node_modules
+
+# Aset build (dihasilkan ulang saat build)
+public/build
+public/hot
+public/storage
+
+# File runtime / sementara
+storage/framework/cache/data/*
+storage/framework/sessions/*
+storage/framework/views/*
+storage/framework/testing/*
+storage/logs/*
+storage/app/private/*
+storage/livewire-tmp/*
+storage/app/public/branding/*
+
+# Cache bootstrap hasil kompilasi lokal
+bootstrap/cache/*.php
+!bootstrap/cache/.gitignore
+
+# File IDE / OS
+.idea
+.vscode
+.fleet
+.nova
+*.log
+Thumbs.db
+.DS_Store
+
+# Script debug
+check_settings.php
+
+# Test (tidak perlu di image produksi)
+tests
+phpunit.xml
+.phpunit.result.cache
+.phpunit.cache
+
+# File docker itu sendiri
+Dockerfile
+.dockerignore
+docker-compose.yaml
+docker-compose.app.yaml
+docker-compose.db.yaml

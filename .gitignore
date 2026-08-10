@@ -1,0 +1,47 @@
+*.log
+.DS_Store
+.env
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+/.fleet
+/.idea
+/.nova
+/.phpunit.cache
+/.vscode
+/.zed
+/auth.json
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+Homestead.json
+Homestead.yaml
+Thumbs.db
+PRDSSO.md
+PRD.md
+
+# ==========================================================================
+# File yang TIDAK perlu masuk GitLab
+# ==========================================================================
+
+# Script debug / one-off yang hanya dipakai saat development
+/check_settings.php
+
+# Upload branding / media hasil uji coba (disebut settings.login_logo)
+# File ini sifatnya per-server, bukan bagian dari source code.
+# Di server baru upload ulang lewat Admin -> Branding Settings, lalu:
+#   php artisan storage:link
+/storage/app/public/branding/*
+/public/storage/branding/*
+
+# File sementara upload (Livewire / tmp upload)
+/storage/app/private/livewire-tmp/*
+
+# Catatan: file runtime (view cache, session, log) sudah ditangani oleh
+# placeholder .gitignore bawaan di dalam storage/ (storage/framework/* dan
+# storage/logs/.gitignore), jadi tidak perlu diulang di sini.

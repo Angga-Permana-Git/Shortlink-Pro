@@ -1,0 +1,53 @@
+# =============================================================================
+# docker-compose.db.yaml         MODE: TERPISAH - KHUSUS DATABASE
+# =============================================================================
+# Hanya berisi database MySQL 8.0. Aplikasi dijalankan via
+# docker-compose.app.yaml.
+#
+# Cara pakai:
+#   docker compose -f docker-compose.db.yaml up -d
+#
+# Yang WAJIB disesuaikan saat jangka panjang / produksi:
+#   - DB_ROOT_PASSWORD : password root MySQL (WAJIB GANTI)
+#   - DB_DATABASE / DB_USERNAME / DB_PASSWORD : harus cocok dengan yang
+#     dipakai di docker-compose.app.yaml (bisa disimpan di file .env).
+#   - Ports: hilangkan baris "ports" bila DB cukup diakses dari dalam
+#     network Docker saja.
+# =============================================================================
+name: shortlink-db
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: shortlink-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-shorturl_db}
+      MYSQL_USER: ${DB_USERNAME:-shortlink}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-shortlink}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-ganti-ini-root-password}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    ports:
+      - "${DB_PORT:-3306}:3306"     # contoh: akses dari host (Navicat/dBeaver)
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - shortlink-network
+
+networks:
+  # Dibuat di sini; docker-compose.app.yaml akan menempel ke network ini.
+  shortlink-network:
+    name: shortlink-network
+
+volumes:
+  db-data:
+    name: shortlink_db-data

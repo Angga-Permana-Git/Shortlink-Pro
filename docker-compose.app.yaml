@@ -1,0 +1,99 @@
+# =============================================================================
+# docker-compose.app.yaml        MODE: TERPISAH - KHUSUS APLIKASI
+# =============================================================================
+# Hanya berisi app (Laravel) + queue (worker). DATABASE DIPISAH pada
+# docker-compose.db.yaml.
+#
+# Cara pakai (URUTAN PENTING):
+#   1) docker compose -f docker-compose.db.yaml  up -d     # mulai DB dulu
+#   2) docker compose -f docker-compose.app.yaml up -d --build  # lalu app
+#   3) buka http://localhost:8080
+#
+# Catatan:
+#   - Kedua file memakai network bersama "shortlink-network".
+#   - App menemukan DB lewat nama container: shortlink-db
+#   - Pastikan nilai DB_DATABASE / DB_USERNAME / DB_PASSWORD sama dengan yang
+#     dipakai di docker-compose.db.yaml (atau tulis di file .env).
+# =============================================================================
+name: shortlink-app
+
+services:
+  # ------------------------------------------------------------------- app
+  app:
+    image: shortlink-app:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: shortlink-app
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      APP_URL: ${APP_URL:-http://localhost:8080}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Jakarta}
+      APP_LOCALE: ${APP_LOCALE:-en}
+
+      # Database: nameserver mengarah ke container MySQL di compose db
+      DB_CONNECTION: mysql
+      DB_HOST: shortlink-db
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-shorturl_db}
+      DB_USERNAME: ${DB_USERNAME:-shortlink}
+      DB_PASSWORD: ${DB_PASSWORD:-shortlink}
+
+      CACHE_STORE: database
+      SESSION_DRIVER: database
+      QUEUE_CONNECTION: database
+      LOG_CHANNEL: ${LOG_CHANNEL:-stderr}
+
+      # (Optional) APP_KEY dari host .env ikut otomatis.
+      # Untuk multi-container pastikan APP_KEY-nya SAMA:
+      # APP_KEY: base64:xxxxxxx
+
+      # SSO Keycloak - kosongkan untuk nonaktifkan SSO
+      KEYCLOAK_BASE_URL: ${KEYCLOAK_BASE_URL:-}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM:-}
+      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID:-shortlink-app}
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:-}
+      KEYCLOAK_REDIRECT_URI: ${KEYCLOAK_REDIRECT_URI:-http://localhost:8080/auth/keycloak/callback}
+    ports:
+      - "${APP_PORT:-8080}:80"
+    volumes:
+      - app-storage:/var/www/html/storage
+    networks:
+      - shortlink-network
+
+  # ---------------------------------------------------------------- queue
+  queue:
+    image: shortlink-app:latest
+    container_name: shortlink-queue
+    restart: unless-stopped
+    command: ["php", "artisan", "queue:work", "--sleep=3", "--tries=3", "--timeout=90"]
+    environment:
+      APP_ROLE: worker
+      APP_URL: ${APP_URL:-http://localhost:8080}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Jakarta}
+      DB_CONNECTION: mysql
+      DB_HOST: shortlink-db
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-shorturl_db}
+      DB_USERNAME: ${DB_USERNAME:-shortlink}
+      DB_PASSWORD: ${DB_PASSWORD:-shortlink}
+      QUEUE_CONNECTION: database
+      CACHE_STORE: database
+      SESSION_DRIVER: database
+      LOG_CHANNEL: ${LOG_CHANNEL:-stderr}
+    depends_on:
+      - app
+    networks:
+      - shortlink-network
+
+networks:
+  # Network dipakai bersama dengan docker-compose.db.yaml
+  shortlink-network:
+    external: true
+    name: shortlink-network
+
+volumes:
+  app-storage:
+    name: shortlink_app-storage

@@ -1,0 +1,136 @@
+# =============================================================================
+# docker-compose.yaml           MODE: SEMUA DALAM SATU (ALL-IN-ONE)
+# =============================================================================
+# Isi: app (Laravel) + queue (worker) + database (MySQL 8.0)
+#
+# Cara pakai:
+#   docker compose up -d --build
+#   buka http://localhost:8080
+#
+# NILAI YANG HARUS DISESUAIKAN (contohnya ada di komentar):
+#   - APP_URL      : URL aplikasi dari host (dipakai untuk asset & redirect)
+#   - APP_ENV      : production / local
+#   - DB_DATABASE  : nama database       (default: shorturl_db)
+#   - DB_USERNAME  : user MySQL          (default: shortlink)
+#   - DB_PASSWORD  : password user MySQL (WAJIB GANTI jika dipakai produksi)
+#   - DB_ROOT_PASSWORD : password root MySQL (WAJIB GANTI)
+#   - APP_SEED     : true jika ingin mengisi demo data saat pertama kali
+#   - APP_KEY      : biarkan kosong (entrypoint yang generate), atau set SAMA
+#                    untuk semua service agar session/queue konsisten
+#   - KEYCLOAK_*   : kosongkan untuk nonaktifkan SSO
+# =============================================================================
+name: shortlink
+
+services:
+  # ------------------------------------------------------------------- app
+  app:
+    image: shortlink-app:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: shortlink-app
+    restart: unless-stopped
+    environment:
+      APP_ENV: ${APP_ENV:-production}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      APP_URL: ${APP_URL:-http://localhost:8080}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Jakarta}
+      APP_LOCALE: ${APP_LOCALE:-en}
+
+      # Database (nilai env ini MENIMPA yang ada di file .env internal)
+      DB_CONNECTION: mysql
+      DB_HOST: shortlink-db
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-shorturl_db}
+      DB_USERNAME: ${DB_USERNAME:-shortlink}
+      DB_PASSWORD: ${DB_PASSWORD:-shortlink}
+
+      # Laravel service drivers
+      CACHE_STORE: database
+      SESSION_DRIVER: database
+      QUEUE_CONNECTION: database
+      LOG_CHANNEL: ${LOG_CHANNEL:-stderr}   # stderr -> terlihat di `docker compose logs`
+
+      # (Optional) APP_KEY dari host .env otomatis ikut via interpolasi.
+      # Untuk multi-container (app + queue) PASTIKAN APP_KEY-nya SAMA:
+      # APP_KEY: base64:xxxxxxx
+
+      # SSO Keycloak - kosongkan untuk nonaktifkan SSO (login lokal aktif)
+      KEYCLOAK_BASE_URL: ${KEYCLOAK_BASE_URL:-}
+      KEYCLOAK_REALM: ${KEYCLOAK_REALM:-}
+      KEYCLOAK_CLIENT_ID: ${KEYCLOAK_CLIENT_ID:-shortlink-app}
+      KEYCLOAK_CLIENT_SECRET: ${KEYCLOAK_CLIENT_SECRET:-}
+      KEYCLOAK_REDIRECT_URI: ${KEYCLOAK_REDIRECT_URI:-http://localhost:8080/auth/keycloak/callback}
+    ports:
+      - "${APP_PORT:-8080}:80"          # host port -> container 80
+    volumes:
+      - app-storage:/var/www/html/storage   # user upload / storage persist
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - shortlink
+
+  # ---------------------------------------------------------------- queue
+  # Worker antrian database. Perintahnya dijalankan ENTRYPOINT mode worker.
+  queue:
+    image: shortlink-app:latest
+    container_name: shortlink-queue
+    restart: unless-stopped
+    command: ["php", "artisan", "queue:work", "--sleep=3", "--tries=3", "--timeout=90"]
+    environment:
+      APP_ROLE: worker          # entrypoint hanya menunggu DB lalu exec, tanpa migrate
+      APP_URL: ${APP_URL:-http://localhost:8080}
+      APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Jakarta}
+      DB_CONNECTION: mysql
+      DB_HOST: shortlink-db
+      DB_PORT: 3306
+      DB_DATABASE: ${DB_DATABASE:-shorturl_db}
+      DB_USERNAME: ${DB_USERNAME:-shortlink}
+      DB_PASSWORD: ${DB_PASSWORD:-shortlink}
+      QUEUE_CONNECTION: database
+      CACHE_STORE: database
+      SESSION_DRIVER: database
+      LOG_CHANNEL: ${LOG_CHANNEL:-stderr}
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - shortlink
+
+  # --------------------------------------------------------------------- db
+  db:
+    image: mysql:8.0
+    container_name: shortlink-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-shorturl_db}
+      MYSQL_USER: ${DB_USERNAME:-shortlink}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-shortlink}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-ganti-ini-root-password}
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-authentication-plugin=mysql_native_password
+    ports:
+      - "${DB_PORT:-3306}:3306"     # contoh: agar bisa diakses dari host (Navicat/dBeaver). Hapus/disable bila tidak perlu.
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    networks:
+      - shortlink
+
+networks:
+  shortlink:
+    name: shortlink-network
+
+volumes:
+  app-storage:
+    name: shortlink_app-storage
+  db-data:
+    name: shortlink_db-data
