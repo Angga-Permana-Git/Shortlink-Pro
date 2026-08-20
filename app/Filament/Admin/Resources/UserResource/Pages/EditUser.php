@@ -15,11 +15,9 @@ class EditUser extends EditRecord
 
     protected ?string $oldRole = null;
 
-    public function mount(int|string $record): void
+    protected function beforeSave(): void
     {
-        parent::mount($record);
-
-        $this->oldRole = $this->record->role;
+        $this->oldRole = $this->record->getOriginal('role') ?? $this->record->role;
     }
 
     protected function authorizeAccess(): void
