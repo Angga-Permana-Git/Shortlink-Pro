@@ -27,7 +27,7 @@ class KeycloakAuthController extends Controller
     public function callback(Request $request, KeycloakAuthService $auth): RedirectResponse
     {
         if ((string) $request->query('state') !== (string) $request->session()->pull('keycloak_state')) {
-            abort(400, 'State parameter tidak valid.');
+            return redirect('/')->withErrors('State Mismatch: Sesi tidak valid atau kedaluwarsa.');
         }
 
         try {
