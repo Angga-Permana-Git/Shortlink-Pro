@@ -1,59 +1,167 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+<h1 align="center">🔗 Enterprise URL Shortener</h1>
 
 <p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+  <strong>Self-hosted URL shortener for internal teams — built with Laravel &amp; Filament</strong>
 </p>
 
-## About Laravel
+<p align="center">
+  <a href="#features">Features</a> •
+  <a href="#tech-stack">Tech Stack</a> •
+  <a href="#quick-start">Quick Start</a> •
+  <a href="#docker-setup">Docker</a> •
+  <a href="#roadmap">Roadmap</a> •
+  <a href="#license">License</a>
+</p>
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## About
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+**Enterprise URL Shortener** is an internal tool for companies that need a secure, self-hosted link shortener with role-based access control. Unlike public services like Bitly or TinyURL, this app gives your organization full control over who creates, manages, and accesses shortened URLs.
 
-## Learning Laravel
+Every link has a clear owner, optional expiration, password protection, and full click analytics — all managed through a clean admin dashboard powered by Filament.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+## Features
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+- **Short URL Management** — Create short links with auto-generated or custom slugs
+- **Password Protection** — Secure sensitive links with hashed passwords
+- **Link Expiration** — Set auto-expiring links with start/end dates
+- **Click Analytics** — Track clicks, status codes, referrers, and user agents
+- **Role-Based Access** — User (manage own links) vs Admin (full control)
+- **Audit Log** — Every action is logged for compliance and security
+- **Admin Panel** — Manage users, links, settings, and branding via Filament
+- **Custom Branding** — Admin can change login page logo and app name
+- **SSO/LDAP Ready** — Switch auth mode via environment variable (dev uses local login)
+- **Docker Support** — Deploy in seconds with Docker Compose
 
-## Laravel Sponsors
+## Tech Stack
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+| Layer       | Technology              |
+|-------------|-------------------------|
+| Backend     | Laravel 11              |
+| Admin Panel | Filament PHP            |
+| Database    | MySQL 8                 |
+| Cache/Queue | Redis (optional)        |
+| Auth        | Local / LDAP / SSO      |
+| Frontend    | Blade, Vite, Tailwind   |
+| Deploy      | Docker, Nginx, PHP-FPM  |
 
-### Premium Partners
+## Quick Start
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+### Requirements
+
+- PHP 8.2+
+- Composer
+- Node.js 18+
+- MySQL 8
+
+### Installation
+
+```bash
+# Clone the repo
+git clone https://github.com/your-username/enterprise-url-shortener.git
+cd enterprise-url-shortener
+
+# Install PHP dependencies
+composer install
+
+# Install JS dependencies
+npm install
+
+# Copy environment file
+cp .env.example .env
+
+# Generate app key
+php artisan key:generate
+
+# Run database migrations
+php artisan migrate
+
+# Seed demo data (optional)
+php artisan db:seed
+
+# Build frontend assets
+npm run build
+
+# Start the development server
+php artisan serve
+```
+
+Visit **http://localhost:8000** and login with the seeded admin account.
+
+## Docker Setup
+
+### Mode 1 — All-in-One (app + db)
+
+```bash
+docker compose up -d --build
+# App available at http://localhost:8080
+```
+
+### Mode 2 — Separated (app & db on different containers)
+
+```bash
+docker compose -f docker-compose.db.yaml up -d
+docker compose -f docker-compose.app.yaml up -d --build
+```
+
+### Important Config
+
+| Variable          | Description                        |
+|-------------------|------------------------------------|
+| `APP_URL`         | Your app URL (default: `http://localhost:8080`) |
+| `DB_PASSWORD`     | Database password (change for production!) |
+| `APP_KEY`         | Must be same across app & queue    |
+| `KEYCLOAK_*`      | Fill only if using SSO; leave empty for local login |
+| `APP_SEED=true`   | Auto-seed demo data on first run   |
+
+## Project Structure
+
+```
+app/
+├── Actions/ShortUrl/       # Business logic for URL operations
+├── Filament/
+│   ├── Admin/              # Admin panel resources
+│   └── User/               # User dashboard resources
+├── Http/Controllers/       # Public redirect endpoint
+├── Models/                 # Eloquent models
+├── Policies/               # Authorization policies
+├── Services/
+│   ├── Auth/               # Auth provider logic
+│   ├── ShortUrl/           # URL management services
+│   ├── Analytics/          # Click tracking
+│   └── Branding/           # Branding settings
+└── Support/Enums/          # Enumerations
+```
+
+## Roadmap
+
+- [x] Short URL CRUD with ownership
+- [x] Password-protected links
+- [x] Link expiration
+- [x] Click analytics
+- [x] Admin panel with Filament
+- [x] Audit logging
+- [x] Docker deployment
+- [ ] QR code generation
+- [ ] Bulk import/export
+- [ ] Custom domains
+- [ ] API key authentication
+- [ ] Advanced analytics dashboard
+
+## Security
+
+- All passwords are hashed (never stored in plain text)
+- Visitor IPs are stored as hashes
+- Rate limiting on login and password forms
+- Authorization enforced at backend level
+- HTTPS required in production
+- Audit log captures all sensitive actions
 
 ## Contributing
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
-
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+This project is open-sourced software licensed under the [MIT License](https://opensource.org/licenses/MIT).
