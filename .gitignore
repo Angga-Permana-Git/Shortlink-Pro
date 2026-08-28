@@ -22,11 +22,19 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Dokumen desain / PRV internal
 PRDSSO.md
 PRD.md
 
+# Database SQLite (data lokal, bukan source code)
+database/database.sqlite
+
+# Docker compose override (opsional)
+docker-compose.override.yaml
+
 # ==========================================================================
-# File yang TIDAK perlu masuk GitLab
+# File yang TIDAK perlu masuk repository
 # ==========================================================================
 
 # Script debug / one-off yang hanya dipakai saat development

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ \App\Models\Setting::get('app_name', 'Shortlink Enterprise') }} — Login Darurat</title>
+    <title>{{ \App\Models\Setting::get('app_name', 'Shortlink Pro') }} — Login Darurat</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -83,7 +83,7 @@
             @if($logoUrl)
                 <img src="{{ $logoUrl }}" alt="Logo">
             @endif
-            <h1>{{ \App\Models\Setting::get('app_name', 'Shortlink Enterprise') }}</h1>
+            <h1>{{ \App\Models\Setting::get('app_name', 'Shortlink Pro') }}</h1>
         </div>
 
         <h2>Login Darurat</h2>

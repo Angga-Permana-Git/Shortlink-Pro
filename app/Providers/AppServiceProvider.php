@@ -21,7 +21,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        \Illuminate\Support\Facades\URL::forceScheme('https');
+        // Only force HTTPS when APP_URL is already HTTPS (e.g. production).
+        // In local/HTTP development this is intentionally skipped.
+        if (str_starts_with(config('app.url', ''), 'https://')) {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
 
         \App\Services\System\TimezoneService::apply();
 

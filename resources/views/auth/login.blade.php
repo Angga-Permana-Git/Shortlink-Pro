@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ \App\Models\Setting::get('app_name', 'Shortlink Enterprise') }} — Masuk</title>
+    <title>{{ \App\Models\Setting::get('app_name', 'Shortlink Pro') }} — Masuk</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -68,7 +68,7 @@
             @if($logoUrl)
                 <img src="{{ $logoUrl }}" alt="Logo">
             @endif
-            <h1>{{ \App\Models\Setting::get('app_name', 'Shortlink Enterprise') }}</h1>
+            <h1>{{ \App\Models\Setting::get('app_name', 'Shortlink Pro') }}</h1>
         </div>
 
         <h2>SSO</h2>
@@ -99,7 +99,7 @@
 
         <div class="emergency"><a href="{{ route('login.local') }}">administrator</a></div>
 
-        <div class="footer">&copy; {{ date('Y') }} {{ \App\Models\Setting::get('app_name', 'Shortlink Enterprise') }}</div>
+        <div class="footer">&copy; {{ date('Y') }} {{ \App\Models\Setting::get('app_name', 'Shortlink Pro') }}</div>
     </div>
 </body>
 </html>

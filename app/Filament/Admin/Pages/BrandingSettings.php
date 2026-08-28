@@ -36,7 +36,7 @@ class BrandingSettings extends Page
                 TextInput::make('app_name')
                     ->label('Nama aplikasi')
                     ->required()
-                    ->placeholder('cth: Shortlink Enterprise')
+                    ->placeholder('cth: Shortlink Pro')
                     ->maxLength(255),
                 FileUpload::make('login_logo')
                     ->label('Unggah Logo Baru (PNG/JPG/SVG)')

@@ -29,12 +29,12 @@ class BrandingTest extends TestCase
         Livewire::actingAs($admin)
             ->test(BrandingSettings::class)
             ->fillForm([
-                'app_name' => 'PMK Shortlink',
+                'app_name' => 'Shortlink Pro',
             ])
             ->call('save')
             ->assertHasNoFormErrors();
 
-        $this->assertSame('PMK Shortlink', Setting::get('app_name'));
+        $this->assertSame('Shortlink Pro', Setting::get('app_name'));
 
         $this->assertDatabaseHas('audit_logs', [
             'actor_id' => $admin->id,
