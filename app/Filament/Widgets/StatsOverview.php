@@ -28,6 +28,16 @@ class StatsOverview extends StatsOverviewWidget
             ->values()
             ->all();
 
+        $clicksTrend = DB::table('click_events')
+            ->selectRaw('DATE(created_at) as day, COUNT(*) as total')
+            ->where('created_at', '>=', now()->subDays(6)->startOfDay())
+            ->groupBy('day')
+            ->orderBy('day')
+            ->pluck('total')
+            ->map(fn ($value) => (float) $value)
+            ->values()
+            ->all();
+
         return [
             Stat::make('Total Links', $totalLinks)
                 ->description('Semua short link')
@@ -37,7 +47,7 @@ class StatsOverview extends StatsOverviewWidget
                 ->description('Akses tercatat')
                 ->icon('heroicon-o-cursor-arrow-rays')
                 ->color('success')
-                ->chart(array_map(fn ($value) => (float) $value, array_fill(0, 7, 0))),
+                ->chart($clicksTrend),
             Stat::make('Pengguna', $totalUsers)
                 ->description('Akun terdaftar')
                 ->icon('heroicon-o-users')
