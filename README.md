@@ -1,220 +1,273 @@
 <div align="center">
 
-# 🔗 Shortlink-Pro
+# Shortlink Pro
 
-**Self-hosted URL shortener for internal teams — built with Laravel & Filament**
+**Pemendek tautan self-hosted: pemakaian publik, panel pengguna, panel admin, dan Linktree dalam satu aplikasi.**
 
-[![Laravel](https://img.shields.io/badge/Laravel-12-orange.svg)](https://laravel.com)
-[![Filament](https://img.shields.io/badge/Filament-PHP-7C3AED.svg)](https://filamentphp.com)
-[![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4.svg)](https://www.php.net)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com)
+[![Laravel](https://img.shields.io/badge/Laravel-12-FF2D20?logo=laravel&logoColor=white)](https://laravel.com)
+[![Filament](https://img.shields.io/badge/Filament-5-FDAE4B)](https://filamentphp.com)
+[![PHP](https://img.shields.io/badge/PHP-8.2.35%2B-777BB4?logo=php&logoColor=white)](https://www.php.net)
+[![MySQL](https://img.shields.io/badge/MySQL-8-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com)
+[![License](https://img.shields.io/badge/Lisensi-MIT-3DA639)](LICENSE)
 
-[Features](#features) • [Tech Stack](#tech-stack) • [Quick Start](#quick-start) • [Docker](#docker-setup) • [Roadmap](#roadmap)
+[Fitur](#fitur) · [Instalasi](#mulai-cepat) · [Konfigurasi](#konfigurasi) · [Deployment](#deployment) · [Pengujian](#pengujian)
 
 </div>
 
 ---
 
-## About
+## Tentang
 
-**Shortlink-Pro** is a secure, self-hosted URL shortener designed for internal teams and organizations. Unlike public services like Bitly or TinyURL, this app gives your organization **full control** over who creates, manages, and accesses shortened URLs.
+Shortlink Pro adalah aplikasi pemendek tautan yang dapat dipakai untuk dua kebutuhan sekaligus:
 
-Every link has a clear owner, optional expiration, password protection, and full click analytics — all managed through a clean admin dashboard powered by Filament.
+- **Publik** — pengunjung dapat memendekkan tautan tanpa membuat akun melalui beranda atau `POST /api/v1/links`.
+- **Terkelola** — pengguna dengan akun dapat mengelola tautan, melihat statistik klik, mengekspor data, dan memiliki halaman Linktree pribadi. Administrator memegang kendali penuh lewat panel Filament.
 
-## Features
+Administrator juga dapat mengaktifkan **wajib SSO**, sehingga tamu diarahkan ke Keycloak sebelum dapat memakai aplikasi. Setiap tautan memiliki pemilik yang jelas, masa berlaku opsional, proteksi kata sandi, dan analitik klik.
 
-- **Short URL Management** — Create short links with auto-generated or custom slugs
-- **Password Protection** — Secure sensitive links with hashed passwords
-- **Link Expiration** — Set auto-expiring links with start/end dates
-- **Click Analytics** — Track clicks, status codes, referrers, and user agents
-- **Role-Based Access** — User (manage own links) vs Admin (full control)
-- **Audit Log** — Every action is logged for compliance and security
-- **Admin Panel** — Manage users, links, settings, and branding via Filament
-- **Custom Branding** — Admin can change login page logo and app name
-- **SSO/LDAP Ready** — Switch auth mode via environment variable (dev uses local login)
-- **Docker Support** — Deploy in seconds with Docker Compose
+## Fitur
 
-## Tech Stack
+### Tautan pendek
 
-| Layer       | Technology              |
-|-------------|-------------------------|
-| Backend     | Laravel 12              |
-| Admin Panel | Filament PHP            |
-| Database    | SQLite (default) / MySQL 8 |
-| Cache/Queue | Redis (optional)        |
-| Auth        | Local / LDAP / SSO      |
-| Frontend    | Blade, Vite, Tailwind   |
-| Deploy      | Docker, Nginx, PHP-FPM  |
+- Slug otomatis atau kustom (huruf, angka, `-`, `_`; maksimal 100 karakter).
+- Validasi tujuan `http`/`https` maksimal 2048 karakter.
+- Masa berlaku, status aktif/nonaktif, dan penghapusan lunak (soft delete).
+- Proteksi kata sandi dengan hash dan penguncian sementara setelah percobaan gagal berulang.
+- Halaman pembuka kata sandi sebelum pengalihan.
+- Kode QR per tautan dengan cache yang dapat diatur.
+- Pemeriksaan tujuan ke **Google Safe Browsing** sebelum tautan disimpan (dapat dimatikan atau fail-open bila kunci API kosong).
+- Slug yang dicadangkan administrator tidak dapat dipakai pengguna.
 
-## Quick Start
+### Analitik
 
-### Requirements
+- Jumlah klik, waktu klik terakhir, status pengalihan, referrer, dan user agent.
+- Alamat IP pengunjung disimpan sebagai hash, bukan alamat asli.
+- Widget panel: tren pertumbuhan, tautan populer, domain tujuan, peta panas klik, pengguna aktif, dan kesehatan akun.
+- Filter periode dashboard.
 
-- PHP 8.2+
-- Composer
-- Node.js 18+
-- SQLite (default) or MySQL 8
+### Linktree
 
-### Installation
+- Profil publik di `/u/{alamat}` dengan slug publik yang dapat diubah.
+- Daftar tautan yang dapat diurutkan, masing-masing dengan penghitung klik.
+- Pencatatan event klik Linktree untuk analitik.
+
+### Panel dan operasional
+
+- **Panel pengguna**: dashboard, CRUD tautan, pengaturan Linktree, ekspor CSV.
+- **Panel admin**: pengguna, tautan, profil Linktree, audit log, audit login, riwayat perubahan peran, impor CSV, ekspor log, impersonasi pengguna.
+- Pengaturan admin: branding (logo/nama), keamanan akun (2FA, IP admin yang diizinkan, wajib SSO), operasional (slug dicadangkan, kedaluwarsa bawaan, retensi log, batas laju, pengumuman), dan zona waktu.
+- Notifikasi dalam aplikasi untuk admin (mis. tautan bermasalah atau antrean perhatian).
+- Antarmuka dua bahasa: Bahasa Indonesia dan English.
+- Perintah terjadwal: pembersihan log harian dan pengingat operasional per jam.
+
+### API
+
+| Metode | Endpoint | Keterangan |
+|--------|----------|------------|
+| `POST` | `/api/v1/links` | Membuat tautan publik. Body: `destination_url` (wajib), `slug`, `expires_at`, `password` (opsional). |
+| `GET` | `/api/v1/linktree` | Profil Linktree milik pengguna yang sedang login. |
+| `PUT` | `/api/v1/linktree` | Memperbarui profil/tautan Linktree. |
+
+API memakai sesi login (cookie) untuk endpoint Linktree; belum ada autentikasi API key. Galat validasi dikembalikan sebagai `422` dengan `error_code`, `message`, `trace_id`, dan `errors`.
+
+## Teknologi
+
+| Lapisan | Teknologi |
+|---------|-----------|
+| Backend | Laravel 12, PHP 8.2.35+ |
+| Panel | Filament 5, Livewire 4 |
+| Frontend | Blade, Tailwind CSS 4, Vite 7 |
+| Basis data | MySQL 8 (produksi) atau SQLite (pengembangan/uji) |
+| Sesi/cache/antrean | Driver `database` (tanpa Redis) |
+| Deployment | Docker (PHP 8.3.36 + Apache), nginx host, Cloudflare Tunnel |
+
+## Kebutuhan
+
+- **PHP 8.2.35 atau lebih baru** — versi ini memuat perbaikan PHP2Shell (CVE-2026-109618/109619). Image Docker memakai 8.3.36.
+- Composer 2.
+- Node.js 22 dan npm 10 (lockfile `package-lock.json`).
+- MySQL 8 untuk produksi; SQLite cukup untuk pengembangan dan pengujian.
+- Ekstensi PHP: `bcmath`, `curl`, `gd`, `intl`, `mbstring`, `openssl`, `pdo_mysql`, `zip`.
+
+## Mulai Cepat
 
 ```bash
-# Clone the repo
-git clone https://github.com/Angga-Permana-Git/Shortlink-Pro.git
+git clone <url-repository> Shortlink-Pro
 cd Shortlink-Pro
 
-# Install PHP dependencies
 composer install
+npm ci
 
-# Install JS dependencies
-npm install
-
-# Copy environment file
 cp .env.example .env
-
-# Generate app key
 php artisan key:generate
 
-# Run database migrations
-php artisan migrate
+# SQLite (paling cepat untuk mencoba)
+touch database/database.sqlite
+php artisan migrate --seed
 
-# Seed demo data (optional)
-php artisan db:seed
-
-# Build frontend assets
 npm run build
-
-# Start the development server
 php artisan serve
 ```
 
-### Default Credentials (after seeding)
+Buka `http://127.0.0.1:8000`. Panel admin ada di `/admin`, panel pengguna di `/user`.
 
-| Role  | Email                | Password  |
-|-------|----------------------|-----------|
-| Admin | admin@company.local  | password  |
-| User  | user@company.local   | password  |
-
-> **Important:** Change these credentials immediately in production!
-
-### Access
-
-- **App:** [http://localhost:8000](http://localhost:8000)
-- **Admin Panel:** [http://localhost:8000/admin](http://localhost:8000/admin)
-- **Login:** [http://localhost:8000/login](http://localhost:8000/login)
-
-## Docker Setup
-
-### Which Mode to Choose?
-
-| Mode | Use Case |
-|------|----------|
-| **Mode 1 (All-in-One)** | Development, testing, single-server deployment |
-| **Mode 2 (Separated)** | Production, when you need separate DB server for scaling |
-
-### Mode 1 — All-in-One (app + db)
+### Akun awal
 
 ```bash
+# Akun admin lokal (break-glass), ditanyakan secara interaktif
+php artisan app:create-local-admin
+
+# Akun demo untuk pengembangan (admin@company.local, user@company.local)
+php artisan app:create-demo-accounts
+```
+
+Kata sandi akun demo diambil dari `DEMO_ACCOUNT_PASSWORD`; bila kosong, aplikasi membuat kata sandi acak. Jangan mengaktifkan akun demo di produksi.
+
+### Perintah harian
+
+```bash
+php artisan test                 # seluruh test fitur/unit
+vendor/bin/pint --test           # cek gaya kode
+vendor/bin/pint                  # perbaiki otomatis
+npm run build                    # aset produksi
+php artisan schedule:work        # penjadwal saat pengembangan
+php artisan logs:purge           # bersihkan log melewati batas retensi
+```
+
+## Konfigurasi
+
+Salin `.env.example` lalu sesuaikan. Kunci yang paling penting:
+
+| Variabel | Keterangan |
+|----------|------------|
+| `APP_URL` | URL publik aplikasi (HTTPS di produksi). Dipakai untuk tautan pendek, QR, dan callback OAuth. |
+| `APP_KEY` | Wajib; samakan nilainya bila menjalankan beberapa container. |
+| `APP_ENV`, `APP_DEBUG` | Produksi: `production` dan `false`. |
+| `APP_LOCALE` | `id` (bawaan) atau `en`. |
+| `DB_*` | MySQL produksi; `DB_CONNECTION=sqlite` untuk pengembangan. |
+| `SESSION_SECURE_COOKIE` | `true` bila publik diakses lewat HTTPS, termasuk di balik Cloudflare Tunnel. |
+| `PEMENDEK_SAFE_BROWSING` | `true` untuk mengaktifkan pemeriksaan tujuan. |
+| `PEMENDEK_SAFE_BROWSING_KEY` | Kunci Google Safe Browsing API. Bila kosong, pemeriksaan dilewati (fail-open). |
+| `PEMENDEK_QR_CACHE_SECONDS` | Lama cache QR, bawaan `86400`. |
+| `PEMENDEK_PASSWORD_MAX_ATTEMPTS`, `PEMENDEK_PASSWORD_LOCK_SECONDS` | Batas percobaan dan durasi penguncian kata sandi tautan. |
+| `KEYCLOAK_*` | Kosongkan bila tidak memakai SSO. Panduan: [KEYCLOAK_SETUP.md](KEYCLOAK_SETUP.md). |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Kosongkan bila tidak memakai login Google. Panduan: [GOOGLE_SETUP.md](GOOGLE_SETUP.md). |
+| `MAIL_*` | Bawaan `MAIL_MAILER=log`; isi SMTP untuk mengirim email atur ulang kata sandi. |
+| `DEMO_ACCOUNT_PASSWORD` | Hanya untuk pengembangan; kosongkan di produksi. |
+
+Pengaturan yang dapat diubah tanpa deploy ada di panel admin: **Branding**, **Keamanan Akun**, **Pengaturan Operasional**, dan **Zona Waktu**.
+
+## Keamanan
+
+- PHP sudah dipatch untuk PHP2Shell; lihat [SECURITY.md](SECURITY.md) untuk prosedur upgrade, mitigasi, dan rollback.
+- Kata sandi pengguna di-hash (bcrypt 12); kata sandi tautan memakai hash dan penguncian percobaan.
+- 2FA tersedia untuk admin, ditambah daftar IP admin yang diizinkan.
+- Rate limit pada login lokal, registrasi, reset kata sandi, pembuatan tautan, dan klik Linktree.
+- Header keamanan dipasang middleware: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`.
+- Cookie sesi mendukung `Secure`, `HttpOnly`, dan `SameSite`.
+- IP pengunjung disimpan sebagai hash; log memiliki batas retensi.
+- Tautan tujuan diperiksa ke Google Safe Browsing (kecuali impor CSV, yang sengaja melewati pemeriksaan agar tidak memanggil layanan luar ribuan kali).
+- CSP tidak dipasang di aplikasi karena panel Filament/Livewire memakai skrip inline; bila menambahkan CSP di reverse proxy, izinkan `'unsafe-inline'` atau gunakan nonce agar panel tidak rusak.
+- `.env`, kunci privat, dan Docker secret tidak boleh di-commit. `.gitignore` sudah mengecualikannya.
+
+## Deployment
+
+### Docker all-in-one (app + MySQL)
+
+```bash
+cp .env.example .env       # isi APP_KEY, DB_PASSWORD, APP_URL
 docker compose up -d --build
-# App available at http://localhost:8080
 ```
 
-### Mode 2 — Separated (app & db on different containers)
+Aplikasi tersedia di `http://localhost:8080`. Rincian varian compose ada di [Cara_Pakai_Docker.md](Cara_Pakai_Docker.md).
+
+### Produksi: nginx host + Cloudflare Tunnel
+
+Folder [shortlink-pro-dockerapp-nginxhost](shortlink-pro-dockerapp-nginxhost/) berisi paket produksi:
+
+- `docker-compose.fulldb.yaml` — app + MySQL + scheduler.
+- `docker-compose.app.yaml` — app + scheduler dengan MySQL eksternal.
+- `Dockerfile` — build 4 tahap (base → vendor → assets → runtime), PHP 8.3.36.
+- `nginx/shortlink-pro.conf` — reverse proxy HTTP di `127.0.0.1:80`.
+- `install.sh` — memasang konfigurasi nginx.
+- `README.md` — langkah lengkap, hardening, dan operasi.
+
+Alurnya: **Cloudflare (HTTPS) → cloudflared → nginx `127.0.0.1:80` → container app `127.0.0.1:9000`**. Tidak ada TLS di server; Cloudflare menangani sertifikat publik.
 
 ```bash
-docker compose -f docker-compose.db.yaml up -d
-docker compose -f docker-compose.app.yaml up -d --build
+cd shortlink-pro-dockerapp-nginxhost
+cp .env.example.fulldb .env
+# isi APP_KEY, DB_PASSWORD, APP_URL (domain tunnel), kunci Safe Browsing
+
+mkdir -p secrets
+openssl rand -base64 24 > secrets/db_root_password.txt
+chmod 600 secrets/db_root_password.txt
+
+docker compose -f docker-compose.fulldb.yaml up -d --build
+sudo ./install.sh --domain short.example.com
 ```
 
-### Important Config
+### Tanpa Docker
 
-| Variable          | Description                                    |
-|-------------------|------------------------------------------------|
-| `APP_URL`         | Your app URL (default: `http://localhost:8080`) |
-| `DB_PASSWORD`     | Database password (change for production!)      |
-| `APP_KEY`         | Must be same across app & queue                |
-| `KEYCLOAK_*`      | Fill only if using SSO; leave empty for local login |
-| `APP_SEED=true`   | Auto-seed demo data on first run               |
+Arahkan document root nginx ke `public/`, jalankan PHP-FPM, lalu tambahkan cron penjadwal:
 
-## Project Structure
-
+```cron
+* * * * * cd /path/Shortlink-Pro && php artisan schedule:run >> /dev/null 2>&1
 ```
+
+## Struktur Proyek
+
+```text
 app/
-├── Actions/ShortUrl/       # Business logic for URL operations
+├── Dto/                     # Objek transfer data
 ├── Filament/
-│   ├── Admin/              # Admin panel resources
-│   └── User/               # User dashboard resources
-├── Http/Controllers/       # Public redirect endpoint
-├── Models/                 # Eloquent models
-├── Policies/               # Authorization policies
-├── Services/
-│   ├── Auth/               # Auth provider logic
-│   ├── ShortUrl/           # URL management services
-│   ├── Analytics/          # Click tracking
-│   └── Branding/           # Branding settings
-└── Support/Enums/          # Enumerations
+│   ├── Admin/               # Resource & pengaturan admin
+│   ├── User/                # Panel pengguna
+│   └── Widgets/             # Widget dashboard
+├── Http/
+│   ├── Controllers/         # Publik, auth, API, redirect
+│   └── Middleware/          # Keamanan, mode akses, trace ID
+├── Models/                  # Eloquent
+├── Services/                # ShortUrl, Linktree, Analytics, Auth, Setting, ...
+├── Support/                 # Enum, validasi, helper
+└── Console/Commands/        # Perintah operasional
+
+config/                      # Termasuk pemendek.php (QR, kata sandi, Safe Browsing)
+database/migrations/         # Skema pengguna, tautan, klik, Linktree, audit, 2FA
+docker/                      # Konfigurasi image Docker
+shortlink-pro-dockerapp-nginxhost/  # Paket deploy produksi
+tests/                       # Feature & unit test
 ```
 
-## Roadmap
+## Pengujian
 
-- [x] Short URL CRUD with ownership
-- [x] Password-protected links
-- [x] Link expiration
-- [x] Click analytics
-- [x] Admin panel with Filament
-- [x] Audit logging
-- [x] Docker deployment
-- [ ] QR code generation
-- [ ] Bulk import/export
-- [ ] Custom domains
-- [ ] API key authentication
-- [ ] Advanced analytics dashboard
-
-## Troubleshooting
-
-### Port 8080 already in use
-Change the port in `docker-compose.yaml`:
-```yaml
-ports:
-  - "8081:80"  # Change 8081 to your preferred port
-```
-
-### Database connection refused (Docker)
-Make sure the DB container is running first:
 ```bash
-docker compose -f docker-compose.db.yaml up -d
-# Wait 10-15 seconds for MySQL to initialize
-docker compose -f docker-compose.app.yaml up -d --build
+php artisan test
+vendor/bin/pint --test
 ```
 
-### Migration errors
-Clear cache and re-run:
-```bash
-php artisan migrate:fresh --seed
-```
+Pedoman dan skenario E2E ada di [uji_e2e.md](uji_e2e.md); konfigurasi di `e2e.config.ts`. Uji E2E memakai basis data dan URL terpisah dari pengembangan/produksi.
 
-### SSO/Login not working
-- Ensure `KEYCLOAK_BASE_URL` and `KEYCLOAK_REALM` are correctly filled
-- Check `KEYCLOAK_SETUP.md` for detailed Keycloak configuration
-- If not using SSO, leave those fields empty — login button will be hidden automatically
+## Dokumentasi
 
-## Security
+| Berkas | Isi |
+|--------|-----|
+| [SECURITY.md](SECURITY.md) | Prosedur patch PHP, CVE PHP2Shell, rollback, checklist produksi. |
+| [Cara_Pakai_Docker.md](Cara_Pakai_Docker.md) | Build image, varian compose, variabel lingkungan. |
+| [shortlink-pro-dockerapp-nginxhost/README.md](shortlink-pro-dockerapp-nginxhost/README.md) | Deploy produksi: nginx host, Cloudflare Tunnel, hardening, backup. |
+| [KEYCLOAK_SETUP.md](KEYCLOAK_SETUP.md) | Konfigurasi SSO OIDC. |
+| [GOOGLE_SETUP.md](GOOGLE_SETUP.md) | Login Google dan Safe Browsing API. |
+| [PRDapp.md](PRDapp.md) | Keputusan produk dan aturan bisnis. |
+| [changelog.md](changelog.md) | Riwayat perubahan. |
 
-- All passwords are hashed (never stored in plain text)
-- Visitor IPs are stored as hashes
-- Rate limiting on login and password forms
-- Authorization enforced at backend level
-- HTTPS required in production
-- Audit log captures all sensitive actions
+## Kontribusi
 
-## Contributing
+1. Buat branch dari `main`.
+2. Tulis perubahan beserta test yang sesuai.
+3. Jalankan `vendor/bin/pint` dan `php artisan test`.
+4. Perbarui `changelog.md` bila perilaku berubah.
+5. Ajukan merge request.
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+## Lisensi
 
-## Author
-
-**Angga Permana** — [GitHub](https://github.com/Angga-Permana-Git)
-
-## License
-
-This project is open-sourced software licensed under the [MIT License](https://opensource.org/licenses/MIT).
+Dirilis di bawah [MIT License](LICENSE). © 2026 Angga Permana.

@@ -1,0 +1,86 @@
+# =============================================================================
+# Shortlink Pro - produksi app saja (database eksternal)
+# =============================================================================
+# Pakai bila MySQL sudah ada di host/server lain dan tidak dikelola compose ini.
+#   cp shortlink-pro-dockerapp-nginxhost/.env.example.app shortlink-pro-dockerapp-nginxhost/.env
+#   docker compose -f shortlink-pro-dockerapp-nginxhost/docker-compose.app.yaml up -d --build
+#
+# Pastikan DB_HOST di .env menunjuk ke database yang bisa dijangkau container.
+# =============================================================================
+
+name: shortlink-pro
+
+x-app-common: &app-common
+    image: shortlink-pro-app:${APP_IMAGE_TAG:-latest}
+    restart: unless-stopped
+    init: true
+    env_file:
+        - .env
+    read_only: true
+    security_opt:
+        - no-new-privileges:true
+    cap_drop:
+        - ALL
+    cap_add:
+        - CHOWN
+        - SETUID
+        - SETGID
+        - KILL
+    tmpfs:
+        - /tmp:size=64m,mode=1777
+        - /run:size=16m,mode=755
+        - /run/lock:size=8m,mode=1777
+        - /var/www/html/bootstrap/cache:size=32m,mode=775
+    volumes:
+        - app-storage:/var/www/html/storage
+    logging:
+        driver: json-file
+        options:
+            max-size: "10m"
+            max-file: "3"
+    healthcheck:
+        test:
+            [
+                "CMD",
+                "php",
+                "-r",
+                "exit(@file_get_contents('http://127.0.0.1:9000/up') === false ? 1 : 0);",
+            ]
+        interval: 30s
+        timeout: 5s
+        retries: 3
+        start_period: 120s
+
+services:
+    app:
+        <<: *app-common
+        build:
+            context: ..
+            dockerfile: shortlink-pro-dockerapp-nginxhost/Dockerfile
+            args:
+                PHP_VERSION: ${PHP_VERSION:-8.3.36}
+        ports:
+            - "127.0.0.1:${APP_PORT:-9000}:9000"
+        networks:
+            - egress
+        stop_grace_period: 30s
+
+    scheduler:
+        <<: *app-common
+        command: ["php", "artisan", "schedule:work"]
+        environment:
+            RUN_MIGRATIONS: "false"
+        depends_on:
+            app:
+                condition: service_healthy
+        healthcheck:
+            disable: true
+        networks:
+            - egress
+
+networks:
+    egress:
+        driver: bridge
+
+volumes:
+    app-storage:

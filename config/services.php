@@ -35,6 +35,17 @@ return [
         ],
     ],
 
+    /*
+    | Masuk dengan Google memakai driver bawaan Laravel Socialite. Tombolnya
+    | hanya tampil bila client_id dan client_secret terisi. redirect harus berupa
+    | URL absolut yang sama persis dengan Authorized redirect URI di Google Cloud.
+    */
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI') ?: env('APP_URL').'/auth/google/callback',
+    ],
+
     'keycloak' => [
         'client_id' => env('KEYCLOAK_CLIENT_ID'),
         'client_secret' => env('KEYCLOAK_CLIENT_SECRET'),

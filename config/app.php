@@ -17,6 +17,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Kata Sandi Akun Demo
+    |--------------------------------------------------------------------------
+    |
+    | Dipakai oleh seeder dan `php artisan app:create-demo-accounts`. Biarkan
+    | kosong agar kata sandi acak dibuat; jangan diisi pada lingkungan produksi.
+    |
+    */
+
+    'demo_account_password' => env('DEMO_ACCOUNT_PASSWORD'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Environment
     |--------------------------------------------------------------------------
     |

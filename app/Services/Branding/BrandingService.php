@@ -2,8 +2,11 @@
 
 namespace App\Services\Branding;
 
+use App\Dto\UpdateBrandingDTO;
 use App\Models\Setting;
 use App\Models\User;
+use App\Services\Audit\AuditLogger;
+use Illuminate\Support\Facades\Storage;
 
 class BrandingService
 {
@@ -26,7 +29,7 @@ class BrandingService
                 return $path;
             }
 
-            return asset('storage/' . ltrim($path, '/'));
+            return asset('storage/'.ltrim($path, '/'));
         }
 
         if (file_exists(public_path('logo.png'))) {
@@ -49,27 +52,46 @@ class BrandingService
     {
         $path = Setting::get('favicon');
 
-        return $path ? asset('storage/' . ltrim($path, '/')) : null;
+        return $path ? asset('storage/'.ltrim($path, '/')) : null;
     }
 
-    public function updateBranding(User $actor, array $data): void
+    public function updateBranding(User $actor, UpdateBrandingDTO $data): void
     {
-        if (array_key_exists('app_name', $data) && $data['app_name'] !== null) {
-            Setting::set('app_name', $data['app_name']);
+        Setting::set('updated_by', $actor->getKey());
+
+        if ($data->appName !== null) {
+            Setting::set('app_name', $data->appName);
         }
 
-        if (array_key_exists('brand_color', $data) && $data['brand_color'] !== null) {
-            Setting::set('brand_color', $data['brand_color']);
+        if ($data->brandColor !== null) {
+            Setting::set('brand_color', $data->brandColor);
         }
 
-        if (array_key_exists('login_logo', $data) && !empty($data['login_logo'])) {
-            Setting::set('login_logo', $data['login_logo']);
+        if ($data->loginLogo !== null) {
+            Setting::set('login_logo', $data->loginLogo);
         }
 
-        if (array_key_exists('favicon', $data) && !empty($data['favicon'])) {
-            Setting::set('favicon', $data['favicon']);
+        if ($data->favicon !== null) {
+            Setting::set('favicon', $data->favicon);
         }
 
-        \App\Services\Audit\AuditLogger::log($actor, 'branding.update', 'setting');
+        AuditLogger::log($actor, 'branding.update', 'setting');
+    }
+
+    /**
+     * Hapus logo khusus beserta berkasnya, lalu catat jejaknya.
+     */
+    public function deleteLogo(User $actor): void
+    {
+        $path = $this->loginLogoPath();
+
+        if ($path && Storage::disk('public')->exists($path)) {
+            Storage::disk('public')->delete($path);
+        }
+
+        Setting::set('login_logo', null);
+        Setting::set('updated_by', $actor->getKey());
+
+        AuditLogger::log($actor, 'branding.logo_delete', 'setting');
     }
 }

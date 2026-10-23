@@ -1,0 +1,106 @@
+/*
+    Gaya halaman status tautan pendek: tidak ditemukan, tidak aktif, kedaluwarsa,
+    dilindungi kata sandi, dan terlalu banyak percobaan.
+*/
+
+.halaman-tautan {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--jarak-5);
+    background: var(--gradien-latar);
+}
+
+.tautan {
+    width: min(var(--lebar-formulir), 100%);
+    padding: var(--jarak-7) var(--jarak-5);
+    border-radius: var(--radius-kartu-besar);
+    background: var(--warna-kartu);
+    box-shadow: var(--bayang-kartu-besar);
+    text-align: center;
+}
+
+.tautan__lambang {
+    display: grid;
+    place-items: center;
+    width: var(--jarak-7);
+    height: var(--jarak-7);
+    margin-inline: auto;
+    border-radius: var(--radius-pil);
+    color: var(--warna-smart-kartu);
+    background: var(--warna-smart-navy);
+    font-size: var(--teks-xl);
+}
+
+.tautan__judul {
+    margin: var(--jarak-4) 0 var(--jarak-2);
+    color: var(--warna-teks-judul);
+    font-size: var(--teks-xl);
+}
+
+.tautan__pesan {
+    margin: 0;
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-sm);
+}
+
+.tautan__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--jarak-3);
+    margin-top: var(--jarak-5);
+    text-align: left;
+}
+
+.tautan__label {
+    color: var(--warna-teks-judul);
+    font-size: var(--teks-sm);
+    font-weight: 600;
+}
+
+.tautan__kontrol {
+    width: 100%;
+    padding: var(--jarak-3);
+    border: var(--lebar-garis) solid var(--warna-garis-input);
+    border-radius: var(--radius-kontrol);
+    font: inherit;
+}
+
+.tautan__kontrol:focus {
+    outline: 0;
+    border-color: var(--warna-smart-navy);
+    box-shadow: var(--bayang-fokus);
+}
+
+.tautan__galat {
+    margin: 0;
+    color: var(--warna-bahaya);
+    font-size: var(--teks-sm);
+}
+
+.tautan__aksi {
+    display: inline-block;
+    padding: var(--jarak-3) var(--jarak-5);
+    margin-top: var(--jarak-5);
+    border: 0;
+    border-radius: var(--radius-pil);
+    color: var(--warna-smart-kartu);
+    background: var(--warna-smart-navy);
+    font: inherit;
+    font-size: var(--teks-sm);
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background var(--transisi-cepat);
+}
+
+.tautan__aksi:hover {
+    background: var(--warna-smart-navy-gelap);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .tautan__aksi {
+        transition: none;
+    }
+}

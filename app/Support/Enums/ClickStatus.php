@@ -14,7 +14,15 @@ enum ClickStatus: string
 
     public function label(): string
     {
-        return str($this->value)->replace('_', ' ')->headline();
+        return match ($this) {
+            self::Success => __('Berhasil'),
+            self::Expired => __('Kedaluwarsa'),
+            self::Inactive => __('Nonaktif'),
+            self::Protected => __('Terlindungi'),
+            self::Scheduled => __('Terjadwal'),
+            self::NotFound => __('Tidak Ditemukan'),
+            self::WrongPassword => __('Kata Sandi Salah'),
+        };
     }
 
     public function redirects(): bool

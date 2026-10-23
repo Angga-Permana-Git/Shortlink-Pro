@@ -7,7 +7,6 @@ use App\Models\RoleChangeLog;
 use App\Models\User;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
-use Illuminate\Support\Facades\DB;
 
 class EditUser extends EditRecord
 {
@@ -33,7 +32,7 @@ class EditUser extends EditRecord
         if ($target->is_protected && $actor->auth_provider !== 'local') {
             Notification::make()
                 ->danger()
-                ->title('Akun terlindungi hanya dapat diubah oleh local admin')
+                ->title(__('Akun terlindungi hanya dapat diubah oleh admin lokal'))
                 ->send();
 
             $this->redirect(ListUsers::getUrl());
@@ -41,19 +40,17 @@ class EditUser extends EditRecord
             return;
         }
 
-        if ($target->id === $actor->id) {
-            Notification::make()
-                ->danger()
-                ->title('Anda tidak dapat mengubah role akun sendiri')
-                ->send();
-
-            $this->redirect(ListUsers::getUrl());
-        }
     }
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
-        // Non-local actors cannot modify protected accounts (extra guard).
+        if ($this->record->id === auth()->id()) {
+            $data['role'] = $this->record->role;
+            $data['is_protected'] = $this->record->is_protected;
+            $data['is_active'] = $this->record->is_active;
+        }
+
+        // Pelaku non-lokal tidak boleh mengubah akun terlindungi (penjaga tambahan).
         if ($this->record->is_protected && auth()->user()?->auth_provider !== 'local') {
             $data['role'] = $this->record->role;
             $data['is_protected'] = true;
@@ -84,7 +81,7 @@ class EditUser extends EditRecord
 
             Notification::make()
                 ->success()
-                ->title('Role diperbarui dari '.$oldRole.' menjadi '.$newRole)
+                ->title(__('Peran diperbarui dari :lama menjadi :baru', ['lama' => $oldRole, 'baru' => $newRole]))
                 ->send();
         }
     }

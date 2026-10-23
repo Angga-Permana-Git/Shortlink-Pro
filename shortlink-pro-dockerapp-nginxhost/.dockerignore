@@ -1,0 +1,6 @@
+# Build context untuk compose produksi adalah root repo
+# (lihat `build.context: ..` pada docker-compose.*.yaml), sehingga aturan
+# pengabaian yang berlaku adalah .dockerignore di root repo.
+#
+# Berkas ini hanya catatan; jangan mengandalkannya untuk menyembunyikan
+# rahasia bila suatu saat context diubah ke folder ini.

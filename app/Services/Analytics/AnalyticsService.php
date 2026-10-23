@@ -2,20 +2,27 @@
 
 namespace App\Services\Analytics;
 
+use App\Dto\RequestContextDTO;
 use App\Models\ClickEvent;
 use App\Models\ShortUrl;
 use App\Support\Enums\ClickStatus;
 
+/**
+ * Pencatatan klik tautan pendek.
+ *
+ * Konteks HTTP dikirim pemanggil lewat RequestContextDTO, jadi service ini
+ * tetap bebas HTTP (disiplin_struktur.md bagian 1).
+ */
 class AnalyticsService
 {
-    public function recordClick(ShortUrl $shortUrl, ClickStatus $status): void
+    public function recordClick(ShortUrl $shortUrl, ClickStatus $status, RequestContextDTO $context): void
     {
         ClickEvent::create([
             'short_url_id' => $shortUrl->id,
             'status' => $status->value,
-            'ip_hash' => $this->hashIp(request()->ip()),
-            'user_agent' => mb_substr(request()->userAgent() ?? '', 0, 500) ?: null,
-            'referer' => mb_substr(request()->headers->get('referer') ?? '', 0, 500) ?: null,
+            'ip_hash' => $this->hashIp($context->ipAddress),
+            'user_agent' => mb_substr($context->userAgent ?? '', 0, 500) ?: null,
+            'referer' => mb_substr($context->referer ?? '', 0, 500) ?: null,
         ]);
 
         if ($status->redirects()) {
@@ -35,6 +42,6 @@ class AnalyticsService
             return null;
         }
 
-        return hash('sha256', $ip . config('app.key'));
+        return hash('sha256', $ip.config('app.key'));
     }
 }

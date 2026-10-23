@@ -63,13 +63,13 @@ class AuthorizationTest extends TestCase
             ->assertOk();
     }
 
-    public function test_user_cannot_delete_link(): void
+    public function test_user_can_delete_own_link(): void
     {
         $user = $this->user();
 
         $link = ShortUrl::factory()->create(['owner_id' => $user->id]);
 
-        $this->assertFalse($user->can('delete', $link));
+        $this->assertTrue($user->can('delete', $link));
         $this->assertTrue($user->can('update', $link));
         $this->assertTrue($user->can('create', ShortUrl::class));
     }
@@ -83,6 +83,7 @@ class AuthorizationTest extends TestCase
 
         $this->assertFalse($user->can('update', $link));
         $this->assertFalse($user->can('view', $link));
+        $this->assertFalse($user->can('delete', $link));
     }
 
     public function test_admin_can_delete_any_link(): void

@@ -1,63 +1,37 @@
 # syntax=docker/dockerfile:1
 # =============================================================================
-# Dockerfile - Aplikasi Shortlink (Laravel 12 + Filament + MySQL)
+# Dockerfile - Shortlink (Laravel 12 + Filament v5)
 #
-# Build sekali jalan:
-#   1. composer install (dependensi PHP, tanpa 'dev')
-#   2. npm install + npm run build (aset frontend, otomatis saat build)
-#   3. runtime PHP 8.3 + Apache, siap dijalankan via docker-compose
+# Urutan stage dibuat berlapis supaya build tidak gagal dan cache tidak sia-sia:
+#   base    -> PHP + ekstensi + Apache (satu-satunya tempat versi PHP)
+#   vendor  -> composer install: manifest dulu, sumber belakangan
+#   assets  -> npm ci: lockfile dulu, sumber belakangan, lalu vite build
+#   runtime -> hanya menyalin hasil, tanpa tool build
 #
-# Entrypoint (docker/entrypoint.sh) mengurus otomatis:
-#   .env (dibuat dari .env.example jika belum ada), APP_KEY,
-#   menunggu database, migrate, storage:link, dan optimize cache.
+# Build:
+#   docker compose build
+#   docker build -t shortlink-app:latest .
+#
+# Versi PHP dikunci ke rilis yang sudah memuat patch PHP2Shell
+# (CVE-2026-109618 & CVE-2026-109619). Bila tag tersebut tidak tersedia di
+# registry, naikkan ke rilis patch berikutnya, jangan turunkan:
+#   docker build --build-arg PHP_VERSION=8.3.36 -t shortlink-app:latest .
 # =============================================================================
 
-# ---------------------------------------------------------------------------
-# STAGE 1: vendor  -> composer install
-# ---------------------------------------------------------------------------
-FROM composer:2 AS vendor
-WORKDIR /app
-
-# Salin seluruh project (pakai .dockerignore agar vendor/node_modules/.env tidak ikut)
-COPY . .
-
-# --no-scripts: jalur post-autoload-dump (package:discover / filament:upgrade)
-# dijalankan di runtime via entrypoint agar tidak gagal tanpa .env.
-# --no-dev: image produksi tidak butuh phpunit/pint/dll.
-RUN composer install \
-        --no-dev \
-        --no-interaction \
-        --no-progress \
-        --no-ansi \
-        --no-scripts \
-        --optimize-autoloader
+ARG PHP_VERSION=8.3.36
 
 # ---------------------------------------------------------------------------
-# STAGE 2: node  -> npm install + build aset Vite
+# base: PHP + ekstensi + Apache
 # ---------------------------------------------------------------------------
-FROM node:22-alpine AS node
-WORKDIR /app
+FROM php:${PHP_VERSION}-apache AS base
 
-# package-lock.json tidak dipakai di repo ini, jadi gunakan `npm install`
-# (bukan `npm ci`) agar tidak gagal.
-COPY package.json ./
-COPY vite.config.js ./
-COPY resources ./resources
-RUN mkdir -p public \
-    && npm install --no-audit --no-fund
-RUN npm run build
+ENV COMPOSER_ALLOW_SUPERUSER=1 \
+    COMPOSER_NO_INTERACTION=1
 
-# ---------------------------------------------------------------------------
-# STAGE 3: runtime  -> PHP 8.3 + Apache
-# ---------------------------------------------------------------------------
-FROM php:8.3-apache AS runtime
-
-ENV APP_DIR=/var/www/html
-
-# Ekstensi PHP yang dibutuhkan aplikasi (Laravel / Filament):
-#   pdo_mysql (DB MySQL), gd (proses gambar/logo), intl, zip,
-#   bcmath, exif, pcntl, mbstring, opcache
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# Ekstensi disusun dalam satu layer agar perubahan konfigurasi Apache tidak
+# memicu kompilasi ulang ekstensi.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
         git \
         unzip \
         libfreetype6-dev \
@@ -69,42 +43,113 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         libonig-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install -j"$(nproc)" \
-        pdo_mysql \
         bcmath \
         exif \
-        pcntl \
-        mbstring \
         gd \
         intl \
+        mbstring \
+        opcache \
+        pcntl \
+        pdo_mysql \
         zip \
-    && docker-php-ext-enable opcache \
     && a2enmod rewrite headers \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/pear
 
-WORKDIR $APP_DIR
+# ---------------------------------------------------------------------------
+# vendor: dependensi PHP
+# ---------------------------------------------------------------------------
+FROM base AS vendor
 
-# Aplikasi (vendor/node_modules/public/build/.env tidak ikut lewat .dockerignore)
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+
+WORKDIR /app
+
+# Manifest disalin lebih dulu: selama composer.json/composer.lock tidak
+# berubah, layer install tetap ter-cache walau kode aplikasi berubah.
+COPY composer.json composer.lock ./
+
+RUN --mount=type=cache,target=/root/.composer/cache \
+    composer install \
+        --no-dev \
+        --no-interaction \
+        --no-progress \
+        --no-ansi \
+        --no-scripts \
+        --prefer-dist \
+        --optimize-autoloader
+
+# Sumber disalin setelah dependensi terpasang, lalu autoload dioptimalkan
+# ulang agar kelas App\* ikut masuk classmap.
 COPY . .
 
-# Overlay vendor (hasil composer) & aset build (hasil vite)
-COPY --from=vendor /app/vendor ./vendor
-COPY --from=node  /app/public/build ./public/build
+RUN composer dump-autoload --no-dev --optimize --no-scripts
 
-# Konfigurasi Apache + PHP + entrypoint
-COPY docker/apache.conf   /etc/apache2/sites-available/000-default.conf
-COPY docker/php.ini       /usr/local/etc/php/conf.d/99-app.ini
+# ---------------------------------------------------------------------------
+# assets: aset Vite
+# ---------------------------------------------------------------------------
+FROM node:22-bookworm-slim AS assets
+
+# Jangan unduh peramban untuk paket uji (e2e/playwright) saat npm ci.
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
+    PUPPETEER_SKIP_DOWNLOAD=1
+
+WORKDIR /app
+
+# package-lock.json sudah ada di repo, jadi npm ci dipakai agar versi
+# dependensi sama persis dengan mesin pengembang.
+COPY package.json package-lock.json ./
+
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --no-audit --no-fund
+
+COPY vite.config.js ./
+COPY resources ./resources
+COPY app ./app
+COPY public ./public
+
+# resources/css/app.css memakai @source ke view pagination Laravel di vendor.
+# Tanpa vendor di stage ini, kelas pagination hilang dari CSS hasil build.
+COPY --from=vendor /app/vendor ./vendor
+
+RUN npm run build
+
+# ---------------------------------------------------------------------------
+# runtime: aplikasi siap jalan
+# ---------------------------------------------------------------------------
+FROM base AS runtime
+
+WORKDIR /var/www/html
+
+# Konfigurasi lebih dulu supaya layer ini tidak ikut berubah setiap kode diedit.
+COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf
+COPY docker/php.ini /usr/local/etc/php/conf.d/99-app.ini
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 
-# Direktori runtime yang wajib writable oleh www-data
-RUN chmod +x /usr/local/bin/entrypoint.sh \
-    && mkdir -p \
+# Normalisasi akhir baris (CRLF) dan izin eksekusi. Tanpa ini, container
+# gagal start dengan "/bin/sh^M: bad interpreter" bila berkas tersimpan CRLF.
+RUN chmod 755 /usr/local/bin/entrypoint.sh \
+    && sed -i 's/\r$//' /usr/local/bin/entrypoint.sh
+
+# Vendor disalin sebelum sumber; .dockerignore mengecualikan vendor sehingga
+# COPY . . tidak menimpanya.
+COPY --from=vendor /app/vendor ./vendor
+COPY . .
+COPY --from=assets /app/public/build ./public/build
+
+RUN mkdir -p \
         storage/framework/cache/data \
         storage/framework/sessions \
         storage/framework/views \
-        storage/framework/testing \
         storage/logs \
         storage/app/public \
-    && chown -R www-data:www-data storage bootstrap/cache
+        bootstrap/cache \
+    && chown -R www-data:www-data storage bootstrap/cache \
+    && chmod -R ug+rwX storage bootstrap/cache
+
+# Laravel menyediakan route kesehatan /up (lihat bootstrap/app.php).
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+    CMD php -r "exit(@file_get_contents('http://127.0.0.1/up') === false ? 1 : 0);"
 
 EXPOSE 80
 

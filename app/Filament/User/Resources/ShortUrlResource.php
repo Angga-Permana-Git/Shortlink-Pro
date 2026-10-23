@@ -4,8 +4,8 @@ namespace App\Filament\User\Resources;
 
 use App\Filament\User\Resources\ShortUrlResource\Pages;
 use App\Models\ShortUrl;
+use App\Services\Time\UserTimezoneService;
 use App\Support\Enums\LinkStatus;
-use App\Support\SlugGenerator;
 use BackedEnum;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -27,15 +27,15 @@ class ShortUrlResource extends Resource
 {
     protected static ?string $model = ShortUrl::class;
 
-    protected static string | BackedEnum | null $navigationIcon = Heroicon::OutlinedLink;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedLink;
 
     protected static ?string $recordTitleAttribute = 'slug';
 
-    protected static ?string $modelLabel = 'Short URL';
+    protected static ?string $modelLabel = 'Tautan Pendek';
 
-    protected static ?string $pluralModelLabel = 'Short URLs';
+    protected static ?string $pluralModelLabel = 'Tautan Pendek';
 
-    protected static ?string $navigationLabel = 'My Links';
+    protected static ?string $navigationLabel = 'Link Saya';
 
     public static function getEloquentQuery(): Builder
     {
@@ -47,51 +47,41 @@ class ShortUrlResource extends Resource
         return true;
     }
 
-    public static function canDelete($record): bool
-    {
-        return false;
-    }
-
-    public static function canDeleteAny(): bool
-    {
-        return false;
-    }
-
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->schema([
-                Section::make('Link Details')
-                    ->description('Buat short link milik Anda. Penghapusan link hanya dapat dilakukan Admin.')
+                Section::make('Detail Tautan')
+                    ->description('Buat tautan pendek milik Anda.')
                     ->schema([
                         TextInput::make('_slug')
-                            ->label('Custom Slug (optional)')
+                            ->label('Nama Pendek Kustom (opsional)')
                             ->placeholder('cth: promo-2026')
-                            ->prefix(fn () => rtrim(config('app.url'), '/') . '/')
+                            ->prefix(fn () => rtrim(config('app.url'), '/').'/')
                             ->live()
                             ->helperText(fn ($state) => filled($state)
-                                ? 'Short URL jadi: ' . rtrim(config('app.url'), '/') . '/' . $state
+                                ? 'Tautan pendek jadi: '.rtrim(config('app.url'), '/').'/'.$state
                                 : 'Kosongkan untuk membuat slug acak otomatis.')
                             ->maxLength(100),
                         TextInput::make('destination_url')
-                            ->label('Destination URL')
+                            ->label('URL Tujuan')
                             ->url()
                             ->required()
                             ->placeholder('https://example.com/halaman-tujuan')
                             ->columnSpanFull(),
-                        Toggle::make('is_active')->label('Active')->default(true),
-                        DateTimePicker::make('starts_at')->label('Starts at'),
-                        DateTimePicker::make('expires_at')->label('Expires at'),
+                        Toggle::make('is_active')->label('Aktif')->default(true),
+                        DateTimePicker::make('starts_at')->label('Mulai aktif'),
+                        DateTimePicker::make('expires_at')->label('Kedaluwarsa'),
                     ]),
-                Section::make('Password Protection')
-                    ->description('Lindungi link dengan password. Password tidak pernah ditampilkan kembali.')
+                Section::make('Proteksi Kata Sandi')
+                    ->description('Lindungi tautan dengan kata sandi. Kata sandi tidak pernah ditampilkan kembali.')
                     ->schema([
                         Toggle::make('_protected')
-                            ->label('Protect with password')
+                            ->label('Lindungi dengan kata sandi')
                             ->live()
-                            ->default(fn (ShortUrl|null $record) => filled($record?->password_hash)),
+                            ->default(fn (?ShortUrl $record) => filled($record?->password_hash)),
                         TextInput::make('_password')
-                            ->label('Link password')
+                            ->label('Kata sandi tautan')
                             ->password()
                             ->revealable()
                             ->placeholder('cth: rahasia123')
@@ -107,7 +97,7 @@ class ShortUrlResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('slug')
-                    ->label('Short URL')
+                    ->label('Tautan Pendek')
                     ->searchable()
                     ->sortable()
                     ->color('primary')
@@ -115,12 +105,17 @@ class ShortUrlResource extends Resource
                     ->copyableState(fn (ShortUrl $record) => $record->shortUrl())
                     ->tooltip(fn (ShortUrl $record) => 'Klik untuk salin: '.$record->shortUrl())
                     ->url(fn (ShortUrl $record) => route('redirect.show', $record->slug)),
-                TextColumn::make('destination_url')->limit(45),
-                IconColumn::make('is_active')->boolean()->label('Active'),
-                TextColumn::make('total_clicks')->label('Clicks')->sortable()->badge(),
-                TextColumn::make('expires_at')->dateTime()->sortable()
+                TextColumn::make('destination_url')->limit(45)->label('URL Tujuan'),
+                IconColumn::make('is_active')->boolean()->label('Aktif'),
+                TextColumn::make('total_clicks')->label('Total Klik')->sortable()->badge(),
+                TextColumn::make('expires_at')->label('Kedaluwarsa')
+                    ->formatStateUsing(fn (ShortUrl $record) => app(UserTimezoneService::class)
+                        ->format($record->expires_at, auth()->user()))
                     ->color(fn (ShortUrl $record) => $record->isExpired() ? 'danger' : 'gray'),
-                TextColumn::make('created_at')->date()->sortable()->label('Created'),
+                TextColumn::make('created_at')->label('Dibuat')
+                    ->formatStateUsing(fn (ShortUrl $record) => app(UserTimezoneService::class)
+                        ->format($record->created_at, auth()->user()))
+                    ->sortable(),
             ])
             ->filters([
                 SelectFilter::make('status')

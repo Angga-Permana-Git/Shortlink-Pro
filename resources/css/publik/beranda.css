@@ -1,0 +1,519 @@
+/*
+    Gaya halaman beranda pemendek tautan.
+
+    Mobile-first: gaya dasar ditulis untuk layar kecil, penyesuaian untuk layar
+    lebih besar hanya ada di bagian akhir memakai breakpoint --breakpoint-sedang
+    (40rem). Semua nilai warna, jarak, ukuran teks, dan radius memakai token dari
+    partials/tokens.blade.php.
+
+    Kerangka halaman (bilah atas, kolom isi, kaki), primitif kartu, dan komponen
+    pemendek tautan dipakai bersama oleh halaman beranda dan halaman pengguna
+    di panel Filament (/user), supaya keduanya tampil sama dan yang membedakan
+    hanya isi kartunya.
+*/
+
+.halaman-beranda {
+    background: var(--gradien-smart);
+}
+
+.bilah-atas,
+.isi-beranda,
+.kaki {
+    width: min(var(--lebar-halaman), 100%);
+    margin-inline: auto;
+}
+
+/* Bilah atas */
+
+.bilah-atas {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--jarak-3);
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--jarak-4) var(--jarak-5);
+}
+
+.bilah-atas__merek {
+    display: flex;
+    align-items: center;
+    gap: var(--jarak-2);
+    color: var(--warna-smart-navy);
+    font-size: var(--teks-lg);
+    font-weight: 700;
+}
+
+.bilah-atas__lambang {
+    display: grid;
+    place-items: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--radius-kontrol);
+    color: var(--warna-smart-kartu);
+    background: var(--warna-smart-navy);
+}
+
+.bilah-atas__aksi {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--jarak-2);
+}
+
+/* Logo merek dari Branding Settings, dipakai bila administrator mengunggahnya. */
+.bilah-atas__logo {
+    width: auto;
+    max-width: 9rem;
+    max-height: 2.25rem;
+    object-fit: contain;
+}
+
+.bilah-atas__form {
+    display: flex;
+    margin: 0;
+}
+
+/* Tombol keluar memakai gaya yang sama dengan tautan bilah atas. */
+.bilah-atas__tombol {
+    background: transparent;
+    font: inherit;
+    font-size: var(--teks-sm);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.bilah-atas__tautan {
+    padding: var(--jarak-2) var(--jarak-4);
+    border-radius: var(--radius-pil);
+    font-size: var(--teks-sm);
+    font-weight: 600;
+    text-decoration: none;
+    transition: background var(--transisi-cepat), color var(--transisi-cepat);
+}
+
+.bilah-atas__tautan--garis {
+    border: var(--lebar-garis) solid var(--warna-smart-navy);
+    color: var(--warna-smart-navy);
+}
+
+.bilah-atas__tautan--padat {
+    color: var(--warna-smart-kartu);
+    background: var(--warna-smart-navy);
+}
+
+.bilah-atas__tautan--padat:hover {
+    background: var(--warna-smart-navy-gelap);
+}
+
+/* Bagian pembuka */
+
+.isi-beranda {
+    display: flex;
+    flex-direction: column;
+    gap: var(--jarak-6);
+    padding: var(--jarak-5) var(--jarak-5) var(--jarak-7);
+}
+
+.pahlawan {
+    text-align: center;
+}
+
+.pahlawan__judul {
+    margin: 0 0 var(--jarak-3);
+    color: var(--warna-smart-navy);
+    font-size: var(--teks-judul);
+    line-height: 1.25;
+}
+
+.pahlawan__catatan {
+    margin: 0;
+    color: var(--warna-teks-lembut);
+}
+
+/* Kartu dasar: dipakai kartu beranda, kartu promosi, dan kartu halaman pengguna. */
+
+.kartu,
+.kartu-pendek,
+.promo {
+    padding: var(--jarak-5);
+    border-radius: var(--radius-kartu-besar);
+    background: var(--warna-smart-kartu);
+    box-shadow: var(--bayang-smart);
+}
+
+.kolom-tautan {
+    display: flex;
+    align-items: center;
+    gap: var(--jarak-3);
+    padding: var(--jarak-3) var(--jarak-4);
+    border: var(--lebar-garis) solid transparent;
+    border-radius: var(--radius-kartu);
+    background: var(--warna-smart-biru);
+    transition: box-shadow var(--transisi-cepat), border-color var(--transisi-cepat);
+}
+
+.kolom-tautan:focus-within {
+    border-color: var(--warna-smart-navy);
+    box-shadow: var(--bayang-fokus);
+}
+
+.kolom-tautan__ikon {
+    color: var(--warna-smart-navy);
+}
+
+.kolom-tautan__input {
+    width: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    font: inherit;
+    color: inherit;
+}
+
+/* Pilihan fitur tambahan */
+
+.pilihan {
+    padding: 0;
+    margin: var(--jarak-5) 0 var(--jarak-4);
+    border: 0;
+}
+
+.pilihan__judul {
+    margin: 0 0 var(--jarak-3);
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-sm);
+}
+
+.pilihan__daftar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--jarak-2);
+}
+
+.pilihan__chip {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--jarak-2);
+    padding: var(--jarak-2) var(--jarak-4);
+    border: var(--lebar-garis) solid var(--warna-garis-input);
+    border-radius: var(--radius-pil);
+    color: var(--warna-smart-navy);
+    background: var(--warna-smart-kartu);
+    font-size: var(--teks-sm);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transisi-cepat), color var(--transisi-cepat), border-color var(--transisi-cepat);
+}
+
+.pilihan__kotak {
+    position: absolute;
+    width: var(--lebar-garis);
+    height: var(--lebar-garis);
+    opacity: 0;
+}
+
+.pilihan__chip:has(.pilihan__kotak:checked) {
+    border-color: var(--warna-smart-navy);
+    color: var(--warna-smart-kartu);
+    background: var(--warna-smart-navy);
+}
+
+.pilihan__chip:has(.pilihan__kotak:focus-visible) {
+    box-shadow: var(--bayang-fokus);
+}
+
+/* Panel fitur yang dibuka chip */
+
+.panel-opsi {
+    padding: var(--jarak-4);
+    margin-bottom: var(--jarak-3);
+    border: var(--lebar-garis) dashed var(--warna-garis-input);
+    border-radius: var(--radius-kartu);
+}
+
+.panel-opsi__label {
+    display: block;
+    margin-bottom: var(--jarak-2);
+    color: var(--warna-teks-judul);
+    font-size: var(--teks-sm);
+    font-weight: 600;
+}
+
+.panel-opsi__kontrol {
+    width: 100%;
+    padding: var(--jarak-3);
+    border: var(--lebar-garis) solid var(--warna-garis-input);
+    border-radius: var(--radius-kontrol);
+    font: inherit;
+}
+
+.panel-opsi__kontrol:focus {
+    outline: 0;
+    border-color: var(--warna-smart-navy);
+    box-shadow: var(--bayang-fokus);
+}
+
+.panel-opsi__awalan {
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    border: var(--lebar-garis) solid var(--warna-garis-input);
+    border-radius: var(--radius-kontrol);
+}
+
+.panel-opsi__domain {
+    padding: var(--jarak-3);
+    color: var(--warna-teks-lembut);
+    background: var(--warna-smart-biru);
+    font-size: var(--teks-sm);
+    white-space: nowrap;
+}
+
+.panel-opsi__awalan .panel-opsi__kontrol {
+    border: 0;
+    border-radius: 0;
+}
+
+/* Teks bantuan di dalam panel fitur (dipakai juga oleh halaman pengguna). */
+
+.panel-opsi__catatan {
+    margin: var(--jarak-2) 0 0;
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-xs);
+}
+
+/* Tombol utama */
+
+.tombol-utama {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--jarak-2);
+    width: 100%;
+    padding: var(--jarak-4);
+    border: 0;
+    border-radius: var(--radius-pil);
+    color: var(--warna-smart-kartu);
+    background: var(--warna-smart-navy);
+    font: inherit;
+    font-size: var(--teks-lg);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transisi-cepat), opacity var(--transisi-cepat);
+}
+
+.tombol-utama:hover {
+    background: var(--warna-smart-navy-gelap);
+}
+
+.tombol-utama--memuat {
+    opacity: 0.7;
+    cursor: progress;
+}
+
+/* Kartu hasil: muncul di bawah tombol setelah tautan dibuat. */
+
+.hasil {
+    padding: var(--jarak-5);
+    margin-top: var(--jarak-5);
+    border: var(--lebar-garis) solid var(--warna-sukses-latar);
+    border-radius: var(--radius-kartu);
+    background: var(--warna-sukses-latar);
+    overflow-wrap: anywhere;
+}
+
+.hasil__label {
+    display: flex;
+    align-items: center;
+    gap: var(--jarak-2);
+    margin: 0 0 var(--jarak-4);
+    color: var(--warna-sukses);
+    font-weight: 600;
+}
+
+.hasil__baris {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--jarak-3);
+}
+
+.hasil__tautan {
+    flex: 1 1 12rem;
+    color: var(--warna-smart-navy);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+.hasil__qr {
+    display: flex;
+    align-items: center;
+    gap: var(--jarak-4);
+    margin-top: var(--jarak-4);
+    padding-top: var(--jarak-4);
+    border-top: var(--lebar-garis) solid var(--warna-smart-kartu);
+}
+
+.hasil__qr-gambar {
+    width: var(--lebar-qr);
+    height: var(--lebar-qr);
+    border-radius: var(--radius-kartu);
+    background: var(--warna-smart-kartu);
+}
+
+.hasil__catatan {
+    margin: var(--jarak-3) 0 0;
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-sm);
+}
+
+.tombol-kecil {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--jarak-2);
+    padding: var(--jarak-2) var(--jarak-4);
+    border: 0;
+    border-radius: var(--radius-pil);
+    color: var(--warna-smart-kartu);
+    background: var(--warna-smart-navy);
+    font: inherit;
+    font-size: var(--teks-sm);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background var(--transisi-cepat);
+}
+
+.tombol-kecil:hover {
+    background: var(--warna-smart-navy-gelap);
+}
+
+/* Pesan galat */
+
+.pesan-galat {
+    padding: var(--jarak-3) var(--jarak-4);
+    margin-top: var(--jarak-4);
+    border-radius: var(--radius-kontrol);
+    color: var(--warna-bahaya);
+    background: var(--warna-bahaya-latar);
+    font-size: var(--teks-sm);
+}
+
+/* Kartu promosi halaman Linktree */
+
+.promo {
+    display: flex;
+    flex-direction: column;
+    gap: var(--jarak-5);
+}
+
+.promo__label {
+    margin: 0 0 var(--jarak-2);
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-xs);
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.promo__judul {
+    margin: 0 0 var(--jarak-3);
+    color: var(--warna-smart-navy);
+    font-size: var(--teks-xl);
+    line-height: 1.35;
+}
+
+.promo__deskripsi {
+    margin: 0;
+    color: var(--warna-teks-lembut);
+}
+
+.promo__alamat {
+    color: var(--warna-smart-navy);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.promo__daftar {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.promo__item {
+    display: flex;
+    gap: var(--jarak-3);
+    padding: var(--jarak-3) 0;
+    border-top: var(--lebar-garis) solid var(--warna-garis);
+}
+
+.promo__item:last-child {
+    border-bottom: var(--lebar-garis) solid var(--warna-garis);
+}
+
+.promo__nomor {
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-xs);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+}
+
+/* Kaki halaman */
+
+.kaki {
+    padding: var(--jarak-5);
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-sm);
+    text-align: center;
+}
+
+/* Layar lebih lebar: --breakpoint-sedang (40rem) */
+
+@media (min-width: 40rem) {
+    .isi-beranda {
+        padding: var(--jarak-6) var(--jarak-5) var(--jarak-7);
+    }
+
+    .kartu-pendek,
+    .promo {
+        padding: var(--jarak-7);
+    }
+
+    .kartu,
+    .kartu-pendek {
+        padding: var(--jarak-6);
+    }
+
+    .promo {
+        flex-direction: row;
+        align-items: flex-start;
+        gap: var(--jarak-6);
+    }
+
+    .promo__teks,
+    .promo__daftar {
+        flex: 1 1 0;
+    }
+}
+
+.bilah-pengumuman {
+    padding: var(--jarak-2) var(--jarak-4);
+    background: var(--warna-aksen, #f59e0b);
+    color: #1f2937;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bilah-atas__tautan,
+    .kolom-tautan,
+    .pilihan__chip,
+    .tombol-utama,
+    .tombol-kecil {
+        transition: none;
+    }
+}

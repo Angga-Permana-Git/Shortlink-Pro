@@ -23,15 +23,22 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 
+# AI context (lokal, jangan di-commit)
+.aicontext/
+
 # Dokumen desain / PRV internal
 PRDSSO.md
 PRD.md
+PROJECT_ANALYSIS.md
 
 # Database SQLite (data lokal, bukan source code)
 database/database.sqlite
 
 # Docker compose override (opsional)
 docker-compose.override.yaml
+
+# Artefak uji E2E (laporan, rekaman, screenshot kegagalan)
+/.e2e
 
 # ==========================================================================
 # File yang TIDAK perlu masuk repository
@@ -47,9 +54,40 @@ docker-compose.override.yaml
 /storage/app/public/branding/*
 /public/storage/branding/*
 
+# Logo profil Linktree milik pengguna; diunggah ulang dari halaman /user.
+/storage/app/public/linktree/*
+/public/storage/linktree/*
+
 # File sementara upload (Livewire / tmp upload)
 /storage/app/private/livewire-tmp/*
 
 # Catatan: file runtime (view cache, session, log) sudah ditangani oleh
 # placeholder .gitignore bawaan di dalam storage/ (storage/framework/* dan
 # storage/logs/.gitignore), jadi tidak perlu diulang di sini.
+
+# ==========================================================================
+# Kredensial: jangan pernah masuk repository
+# ==========================================================================
+# Menangkap .env di subfolder (mis. shortlink-pro-dockerapp-nginxhost/.env).
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.example.*
+
+# Kata sandi root MySQL untuk deploy produksi (Docker secret).
+/shortlink-pro-dockerapp-nginxhost/secrets/
+
+# Sertifikat/kunci privat bila kelak dipakai.
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Berkas cadangan lokal (hasil patch/upgrade).
+*.bak
+*.bak-*
+*.orig
+
+# Liputan pengujian.
+/coverage
+/coverage.xml

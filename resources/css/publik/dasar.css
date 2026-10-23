@@ -1,0 +1,98 @@
+/*
+    Gaya global halaman publik.
+
+    Hanya berisi reset, dasar tipografi, dan utilitas aksesibilitas. Gaya setiap
+    komponen berada di berkas CSS milik halaman yang memakainya.
+*/
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-height: 100vh;
+    color: var(--warna-teks);
+    background: var(--warna-latar);
+    font-family: var(--font-dasar);
+    font-size: var(--teks-md);
+    line-height: 1.5;
+}
+
+a {
+    color: inherit;
+}
+
+/*
+    !important dipakai karena atribut [hidden] harus mengalahkan aturan display
+    komponen (misalnya display: flex pada blok QR). Ini cara yang direkomendasikan
+    spesifikasi HTML untuk menyembunyikan elemen.
+*/
+[hidden] {
+    display: none !important;
+}
+
+/* Ikon SVG mengikuti ukuran dan warna teks di sekitarnya. */
+.ikon {
+    width: 1.15em;
+    height: 1.15em;
+    flex: none;
+}
+
+/* Teks yang hanya dibaca pembaca layar. */
+.sr-only {
+    position: absolute;
+    width: var(--lebar-garis);
+    height: var(--lebar-garis);
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+}
+
+/* Pemilih bahasa ID/EN di bilah atas halaman publik. */
+.pemilih-bahasa {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--jarak-1);
+    padding: 0.125rem;
+    border: var(--lebar-garis) solid var(--warna-garis);
+    border-radius: var(--radius-pil);
+    background: var(--warna-kartu);
+}
+
+.pemilih-bahasa__form {
+    margin: 0;
+}
+
+.pemilih-bahasa__tombol {
+    min-width: 2.25rem;
+    padding: 0.25rem var(--jarak-2);
+    border: 0;
+    border-radius: var(--radius-pil);
+    background: transparent;
+    color: var(--warna-teks-lembut);
+    font: inherit;
+    font-size: var(--teks-xs);
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transisi-cepat), color var(--transisi-cepat);
+}
+
+.pemilih-bahasa__tombol:hover {
+    background: var(--warna-latar);
+    color: var(--warna-teks);
+}
+
+.pemilih-bahasa__tombol:focus-visible {
+    outline: 0;
+    box-shadow: var(--bayang-fokus);
+}
+
+.pemilih-bahasa__tombol--aktif,
+.pemilih-bahasa__tombol--aktif:hover {
+    background: var(--warna-utama);
+    color: #FFFFFF;
+}
+

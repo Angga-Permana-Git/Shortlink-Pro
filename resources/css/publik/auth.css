@@ -1,0 +1,246 @@
+/*
+    Gaya halaman masuk dan daftar akun (di luar panel Filament).
+
+    Dipakai bersama oleh auth/login-local.blade.php dan auth/register.blade.php
+    supaya nilai desainnya tidak ditulis dua kali. Lebarnya memakai min() sehingga
+    tidak perlu media query sama sekali.
+*/
+
+.halaman-auth {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--jarak-5);
+    padding: var(--jarak-5);
+    background: var(--gradien-smart);
+}
+
+.kartu-auth {
+    width: min(var(--lebar-formulir), 100%);
+    padding: var(--jarak-6) var(--jarak-5);
+    border-radius: var(--radius-kartu-besar);
+    background: var(--warna-smart-kartu);
+    box-shadow: var(--bayang-smart);
+}
+
+.kartu-auth__merek {
+    display: flex;
+    align-items: center;
+    gap: var(--jarak-2);
+    padding-bottom: var(--jarak-5);
+    margin-bottom: var(--jarak-5);
+    border-bottom: var(--lebar-garis) solid var(--warna-garis);
+}
+
+.kartu-auth__logo {
+    max-width: 7.5rem;
+    max-height: var(--jarak-6);
+}
+
+.kartu-auth__nama {
+    color: var(--warna-smart-navy);
+    font-size: var(--teks-md);
+    font-weight: 700;
+}
+
+.kartu-auth__judul {
+    margin: 0 0 var(--jarak-1);
+    color: var(--warna-smart-navy);
+    font-size: var(--teks-xl);
+    line-height: 1.3;
+}
+
+.kartu-auth__catatan {
+    margin: 0 0 var(--jarak-5);
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-sm);
+}
+
+.form-auth {
+    display: flex;
+    flex-direction: column;
+    gap: var(--jarak-4);
+}
+
+.form-auth__label {
+    display: block;
+    margin-bottom: var(--jarak-2);
+    color: var(--warna-teks-judul);
+    font-size: var(--teks-sm);
+    font-weight: 600;
+}
+
+.form-auth__kontrol {
+    width: 100%;
+    padding: var(--jarak-3) var(--jarak-3);
+    border: var(--lebar-garis) solid var(--warna-garis-input);
+    border-radius: var(--radius-kontrol);
+    font: inherit;
+    font-size: var(--teks-sm);
+    transition: border-color var(--transisi-cepat), box-shadow var(--transisi-cepat);
+}
+
+.form-auth__kontrol:focus {
+    outline: 0;
+    border-color: var(--warna-smart-navy);
+    box-shadow: var(--bayang-fokus);
+}
+
+.form-auth__petunjuk {
+    margin: var(--jarak-2) 0 0;
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-xs);
+}
+
+.form-auth__petunjuk a {
+    color: var(--warna-smart-navy);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.form-auth__petunjuk a:hover {
+    text-decoration: underline;
+}
+
+.tombol-auth {
+    display: block;
+    padding: var(--jarak-3);
+    border: 0;
+    border-radius: var(--radius-pil);
+    color: var(--warna-smart-kartu);
+    background: var(--warna-smart-navy);
+    font: inherit;
+    font-weight: 600;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background var(--transisi-cepat);
+}
+
+.tombol-auth:hover {
+    background: var(--warna-smart-navy-gelap);
+}
+
+.tombol-auth--sekunder {
+    margin-top: var(--jarak-2);
+    background: transparent;
+    color: var(--warna-smart-navy);
+    border: 1px solid var(--warna-garis, #d1d5db);
+}
+
+.tombol-auth--sekunder:hover {
+    background: transparent;
+    color: var(--warna-smart-navy-gelap);
+}
+
+/*
+    Tombol masuk dengan penyedia di luar SSO kantor (Google). Warnanya putih
+    dengan garis tepi supaya tidak bersaing dengan tombol aksi utama.
+*/
+.tombol-auth--google {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--jarak-2);
+    color: var(--warna-teks-judul);
+    background: var(--warna-smart-kartu);
+    border: var(--lebar-garis) solid var(--warna-garis-input);
+}
+
+.tombol-auth--google:hover {
+    background: var(--warna-smart-biru);
+}
+
+.tombol-auth__ikon {
+    width: 1.15rem;
+    height: 1.15rem;
+    flex: none;
+}
+
+/* Pemisah "atau" di antara dua cara masuk. */
+.pemisah-auth {
+    display: flex;
+    align-items: center;
+    gap: var(--jarak-3);
+    margin: var(--jarak-5) 0;
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-xs);
+}
+
+.pemisah-auth::before,
+.pemisah-auth::after {
+    content: "";
+    flex: 1;
+    height: var(--lebar-garis);
+    background: var(--warna-garis);
+}
+
+.pesan-auth {
+    margin: 0 0 var(--jarak-4);
+    padding: var(--jarak-3) var(--jarak-4);
+    border-radius: var(--radius-kontrol);
+    color: var(--warna-bahaya);
+    background: var(--warna-bahaya-latar);
+    font-size: var(--teks-sm);
+}
+
+.pesan-auth p {
+    margin: 0;
+}
+
+/* Varian netral untuk keterangan, bukan galat. */
+.pesan-auth--info {
+    color: var(--warna-teks-judul);
+    background: var(--warna-smart-biru);
+}
+
+/* Tautan di dalam pesan (misalnya pratinjau tautan reset saat mailer log). */
+.pesan-auth--info a {
+    color: var(--warna-smart-navy);
+    font-weight: 600;
+    word-break: break-all;
+}
+
+.kartu-auth__kaki {
+    margin-top: var(--jarak-5);
+    padding-top: var(--jarak-4);
+    border-top: var(--lebar-garis) solid var(--warna-garis);
+    font-size: var(--teks-sm);
+    text-align: center;
+}
+
+.kartu-auth__kaki p {
+    margin: 0 0 var(--jarak-2);
+    color: var(--warna-teks-lembut);
+}
+
+.kartu-auth__kaki a {
+    color: var(--warna-smart-navy);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.kartu-auth__kaki a:hover {
+    text-decoration: underline;
+}
+
+.kartu-auth__bahasa {
+    display: flex;
+    justify-content: center;
+    margin-top: var(--jarak-4);
+}
+
+.kaki-auth {
+    margin: 0;
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-xs);
+    text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .form-auth__kontrol,
+    .tombol-auth {
+        transition: none;
+    }
+}

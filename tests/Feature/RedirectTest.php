@@ -70,7 +70,7 @@ class RedirectTest extends TestCase
 
     public function test_unknown_slug_shows_not_found(): void
     {
-        $this->get('/does-not-exist')->assertOk();
+        $this->get('/does-not-exist')->assertNotFound();
     }
 
     public function test_password_protected_link_prompts_for_password(): void
@@ -84,7 +84,7 @@ class RedirectTest extends TestCase
 
         $this->get(route('redirect.show', 'testpw'))
             ->assertOk()
-            ->assertSee('Link Dilindungi');
+            ->assertSee('Tautan Dilindungi');
     }
 
     public function test_correct_password_unlocks_redirect(): void

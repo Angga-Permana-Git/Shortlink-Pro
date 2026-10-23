@@ -1,33 +1,33 @@
 @php
-    $icon = match ($title ?? '') {
-        'Link kedaluwarsa', 'Link belum aktif' => '⚠️',
-        'Terlalu banyak percobaan' => '🛑',
-        default => '🚫',
+    $teks = match ($status) {
+        \App\Support\Enums\LinkAccessStatus::Inactive => [
+            'judul' => __('ui.tautan.nonaktif_judul'),
+            'pesan' => __('ui.tautan.nonaktif_pesan'),
+            'ikon' => 'kunci',
+        ],
+        \App\Support\Enums\LinkAccessStatus::Expired => [
+            'judul' => __('ui.tautan.kedaluwarsa_judul'),
+            'pesan' => __('ui.tautan.kedaluwarsa_pesan'),
+            'ikon' => 'jam',
+        ],
+        \App\Support\Enums\LinkAccessStatus::Scheduled => [
+            'judul' => __('ui.tautan.belum_aktif_judul'),
+            'pesan' => __('ui.tautan.belum_aktif_pesan'),
+            'ikon' => 'jam',
+        ],
+        \App\Support\Enums\LinkAccessStatus::TooManyAttempts => [
+            'judul' => __('ui.tautan.terlalu_banyak_judul'),
+            'pesan' => __('ui.tautan.terlalu_banyak_pesan'),
+            'ikon' => 'kunci',
+        ],
+        default => [
+            'judul' => __('ui.tautan.umum_judul'),
+            'pesan' => __('ui.tautan.umum_pesan'),
+            'ikon' => 'kotak',
+        ],
     };
 @endphp
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $title ?? 'Mohon Maaf' }}</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Inter', 'Segoe UI', sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1A296C 0%, #3399FF 100%); color: #1F2937; }
-        .card { background: #FFFFFF; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,.15); padding: 48px; max-width: 420px; width: 100%; text-align: center; }
-        .icon { font-size: 56px; }
-        h1 { margin: 16px 0 8px; font-size: 22px; color: #111827; }
-        p { color: #6B7280; font-size: 14px; line-height: 1.6; }
-        a { display: inline-block; margin-top: 24px; background: #2563EB; color: #fff; padding: 10px 24px; border-radius: 8px; text-decoration: none; font-size: 14px; font-weight: 600; }
-        a:hover { background: #1D4ED8; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <div class="icon">{{ $icon }}</div>
-        <h1>{{ $title ?? 'Mohon Maaf' }}</h1>
-        <p>{{ $message ?? 'Link ini tidak dapat diakses.' }}</p>
-        <a href="/">Kembali ke Beranda</a>
-    </div>
-</body>
-</html>
+
+<x-halaman-tautan :judul="$teks['judul']" :pesan="$teks['pesan']" :nama-ikon="$teks['ikon']">
+    <a class="tautan__aksi" href="{{ url('/') }}">{{ __('ui.umum.kembali_beranda') }}</a>
+</x-halaman-tautan>

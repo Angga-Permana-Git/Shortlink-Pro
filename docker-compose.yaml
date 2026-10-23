@@ -15,9 +15,17 @@
 #   - DB_PASSWORD  : password user MySQL (WAJIB GANTI jika dipakai produksi)
 #   - DB_ROOT_PASSWORD : password root MySQL (WAJIB GANTI)
 #   - APP_SEED     : true jika ingin mengisi demo data saat pertama kali
-#   - APP_KEY      : biarkan kosong (entrypoint yang generate), atau set SAMA
-#                    untuk semua service agar session/queue konsisten
+#   - APP_KEY      : aplikasi + queue WAJIB memakai kunci yang SAMA. Isi di
+#                    host: php artisan key:generate --show, lalu
+#                    APP_KEY=base64:... di file .env host. Bila kosong,
+#                    container app membuat kunci sendiri dan queue akan
+#                    memperingatkan karena kuncinya berbeda.
 #   - KEYCLOAK_*   : kosongkan untuk nonaktifkan SSO
+#   - PHP_VERSION  : default 8.3.36 (rilis berpacth PHP2Shell)
+#
+# Build memakai Dockerfile 4 stage (base -> vendor -> assets -> runtime).
+# Argumen PHP_VERSION diteruskan ke build supaya versi PHP tidak ditentukan
+# di dua tempat.
 # =============================================================================
 name: shortlink
 
@@ -28,6 +36,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        PHP_VERSION: ${PHP_VERSION:-8.3.36}
     container_name: shortlink-app
     restart: unless-stopped
     environment:
@@ -51,9 +61,9 @@ services:
       QUEUE_CONNECTION: database
       LOG_CHANNEL: ${LOG_CHANNEL:-stderr}   # stderr -> terlihat di `docker compose logs`
 
-      # (Optional) APP_KEY dari host .env otomatis ikut via interpolasi.
-      # Untuk multi-container (app + queue) PASTIKAN APP_KEY-nya SAMA:
-      # APP_KEY: base64:xxxxxxx
+      # APP_KEY: kosong -> entrypoint membuat sendiri (hanya aman untuk satu
+      # container). Untuk app + queue isi nilainya di host agar SAMA:
+      APP_KEY: ${APP_KEY:-}
 
       # SSO Keycloak - kosongkan untuk nonaktifkan SSO (login lokal aktif)
       KEYCLOAK_BASE_URL: ${KEYCLOAK_BASE_URL:-}
@@ -75,11 +85,23 @@ services:
   # Worker antrian database. Perintahnya dijalankan ENTRYPOINT mode worker.
   queue:
     image: shortlink-app:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PHP_VERSION: ${PHP_VERSION:-8.3.36}
     container_name: shortlink-queue
     restart: unless-stopped
+    # Beri waktu job yang sedang berjalan selesai saat container dihentikan
+    # (command memakai --timeout=90).
+    stop_grace_period: 100s
     command: ["php", "artisan", "queue:work", "--sleep=3", "--tries=3", "--timeout=90"]
     environment:
       APP_ROLE: worker          # entrypoint hanya menunggu DB lalu exec, tanpa migrate
+      # Tanpa ini worker memakai APP_ENV/APP_DEBUG dari .env.example di image.
+      APP_ENV: ${APP_ENV:-production}
+      APP_DEBUG: ${APP_DEBUG:-false}
+      APP_KEY: ${APP_KEY:-}
       APP_URL: ${APP_URL:-http://localhost:8080}
       APP_TIMEZONE: ${APP_TIMEZONE:-Asia/Jakarta}
       DB_CONNECTION: mysql
@@ -93,6 +115,8 @@ services:
       SESSION_DRIVER: database
       LOG_CHANNEL: ${LOG_CHANNEL:-stderr}
     depends_on:
+      app:
+        condition: service_healthy   # menunggu migrasi + Apache siap
       db:
         condition: service_healthy
     networks:

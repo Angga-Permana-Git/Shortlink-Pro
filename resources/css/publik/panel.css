@@ -1,0 +1,994 @@
+/*
+    Gaya kartu halaman tunggal pengguna (/user).
+
+    Kerangka halaman (bilah atas, latar gradien, kolom isi, kaki), primitif
+    kartu, dan komponen formulir pemendek dipakai ulang dari beranda.css,
+    sehingga satu-satunya perbedaan dengan beranda adalah isi kartunya. Berkas
+    ini hanya menambahkan komponen yang khas halaman ini: kepala kartu, angka
+    ringkas, daftar tautan beserta aksinya, dan pratinjau Linktree.
+
+    Mobile-first: gaya dasar ditulis untuk layar kecil, penyesuaian untuk layar
+    lebih besar ada di bagian akhir memakai breakpoint 40rem. Semua nilai warna,
+    jarak, ukuran teks, dan radius memakai token dari partials/tokens.blade.php.
+*/
+
+/* Lembar kartu: satu-satunya anak kolom isi, jadi jarak antarkartu ada di sini. */
+
+.lembar-kartu {
+    display: flex;
+    flex-direction: column;
+    gap: var(--jarak-6);
+}
+
+/* Kepala kartu dan teks pendampingnya. */
+
+.kartu__kepala {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--jarak-3);
+    margin-bottom: var(--jarak-3);
+}
+
+.kartu__judul {
+    margin: 0;
+    color: var(--warna-smart-navy);
+    font-size: var(--teks-xl);
+}
+
+.kartu__urut {
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-xs);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+}
+
+/* Tombol buka/tutup isi kartu; dorong ke kanan kepala kartu. */
+
+.kartu__lipat {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--jarak-1);
+    margin-left: auto;
+    padding: var(--jarak-1) var(--jarak-2);
+    border: 0;
+    border-radius: var(--radius-pil);
+    color: var(--warna-smart-navy);
+    background: transparent;
+    font: inherit;
+    font-size: var(--teks-xs);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.kartu__lipat:hover {
+    text-decoration: underline;
+}
+
+.kartu__lipat .ikon {
+    transition: transform var(--transisi-cepat);
+}
+
+.kartu__lipat[aria-expanded="true"] .ikon {
+    transform: rotate(180deg);
+}
+
+.kartu__sapaan,
+.kartu__catatan {
+    margin: 0 0 var(--jarak-4);
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-sm);
+}
+
+.kartu__sapaan {
+    margin-bottom: var(--jarak-3);
+}
+
+.kartu__status {
+    display: flex;
+    align-items: center;
+    gap: var(--jarak-2);
+    padding: var(--jarak-3) var(--jarak-4);
+    margin: 0 0 var(--jarak-4);
+    border-radius: var(--radius-kontrol);
+    color: var(--warna-sukses);
+    background: var(--warna-sukses-latar);
+    font-size: var(--teks-sm);
+    font-weight: 600;
+}
+
+/* Kartu 1: angka ringkas tautan pengguna. */
+
+.statistik {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--jarak-3);
+    margin: 0;
+    padding: 0;
+}
+
+.statistik__item {
+    padding: var(--jarak-4);
+    border-radius: var(--radius-kartu);
+    background: var(--warna-smart-biru);
+}
+
+.statistik__angka {
+    margin: 0;
+    color: var(--warna-smart-navy);
+    font-size: var(--teks-xl);
+    font-weight: 700;
+}
+
+.statistik__label {
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-sm);
+}
+
+/* Tren klik (sparkline) di bawah karti Total Klik. */
+
+.statistik__tren {
+    display: block;
+    margin-top: var(--jarak-1);
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-xs);
+    font-weight: 600;
+}
+
+[data-trend="naik"] { color: var(--warna-sukses); }
+[data-trend="turun"] { color: var(--warna-bahaya); }
+
+/* Link terpopuler di bawah statistik. */
+
+.statistik__populer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--jarak-4);
+    padding: var(--jarak-3) var(--jarak-4);
+    border-radius: var(--radius-kartu);
+    background: var(--warna-smart-biru);
+}
+
+.statistik__angka-kecil {
+    color: var(--warna-smart-navy);
+    font-size: var(--teks-sm);
+    font-weight: 600;
+}
+
+/* Sparkline: grafik kecil di bawah statistik. */
+
+.sparkline {
+    margin-top: var(--jarak-4);
+}
+
+.sparkline__svg {
+    width: 100%;
+    height: 2.5rem;
+}
+
+.sparkline__garis {
+    fill: none;
+    stroke: var(--warna-smart-navy);
+    stroke-width: 1.5;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.sparkline__sumbu {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0;
+    margin-top: var(--jarak-2);
+    font-size: var(--teks-xs);
+    color: var(--warna-teks-lembut);
+    text-align: center;
+}
+
+.sparkline__label {
+    color: var(--warna-teks-lembut);
+}
+
+/* Kartu 3: kontrol pencarian, filter, dan ekspor di atas daftar tautan. */
+
+.daftar-tautan__kontrol {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--jarak-2);
+    margin-bottom: var(--jarak-4);
+}
+
+.pencarian {
+    position: relative;
+    flex: 1 1 12rem;
+    min-width: 0;
+}
+
+.pencarian__ikon {
+    position: absolute;
+    left: var(--jarak-2);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--warna-teks-lembut);
+    width: 1rem;
+    height: 1rem;
+}
+
+.pencarian__input {
+    width: 100%;
+    padding: var(--jarak-2) var(--jarak-3) var(--jarak-2) calc(var(--jarak-2) + 1rem);
+    border: var(--lebar-garis) solid var(--warna-garis-input);
+    border-radius: var(--radius-kontrol);
+    font: inherit;
+    font-size: var(--teks-sm);
+}
+
+.pencarian__input:focus {
+    outline: 0;
+    border-color: var(--warna-smart-navy);
+    box-shadow: var(--bayang-fokus);
+}
+
+.pemilih-status,
+.pemilih-urut {
+    padding: var(--jarak-1) var(--jarak-3);
+    border: var(--lebar-garis) solid var(--warna-garis-input);
+    border-radius: var(--radius-kontrol);
+    background: var(--warna-smart-kartu);
+    font: inherit;
+    font-size: var(--teks-sm);
+    cursor: pointer;
+}
+
+.pemilih-status:focus,
+.pemilih-urut:focus {
+    outline: 0;
+    border-color: var(--warna-smart-navy);
+}
+
+/* Toggle switch untuk status terbit halaman publik. */
+
+.toggle-status {
+    display: flex;
+    align-items: center;
+    gap: var(--jarak-3);
+    margin: var(--jarak-4) 0;
+    padding: var(--jarak-3) var(--jarak-4);
+    border-radius: var(--radius-kartu);
+    background: var(--warna-smart-biru);
+}
+
+.toggle-status__label {
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-sm);
+    font-weight: 600;
+}
+
+.toggle-status__switch {
+    position: relative;
+    width: 2.75rem;
+    height: 1.5rem;
+    border: 0;
+    border-radius: var(--radius-pil);
+    background: var(--warna-garis);
+    cursor: pointer;
+    transition: background var(--transisi-cepat);
+}
+
+.toggle-status__switch[data-hidup="true"] {
+    background: var(--warna-smart-navy);
+}
+
+.toggle-status__lintas {
+    position: absolute;
+    top: 0.125rem;
+    left: 0.125rem;
+    width: 1.25rem;
+    height: 1.25rem;
+    border-radius: 50%;
+    background: var(--warna-smart-kartu);
+    transition: transform var(--transisi-cepat);
+}
+
+.toggle-status__switch[data-hidup="true"] .toggle-status__lintas {
+    transform: translateX(1.25rem);
+}
+
+.toggle-status__teks {
+    color: var(--warna-smart-navy);
+    font-size: var(--teks-sm);
+    font-weight: 600;
+}
+
+/* Badge status: Aktif Selamanya (hijau). */
+.tanda--aktif {
+    color: var(--warna-sukses);
+    background: var(--warna-sukses-latar);
+}
+
+/* Tooltip sederhana untuk tanda kedaluwarsa. */
+.tanda__tooltip {
+    position: relative;
+    cursor: help;
+}
+
+.tanda__tooltip::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: var(--jarak-1) var(--jarak-2);
+    border-radius: var(--radius-kontrol);
+    background: var(--warna-smart-navy);
+    color: var(--warna-smart-kartu);
+    font-size: var(--teks-xs);
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transisi-cepat);
+}
+
+.tanda__tooltip:hover::after {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Kartu 3: tautan milik pengguna beserta aksinya. */
+
+.daftar-tautan {
+    display: flex;
+    flex-direction: column;
+    gap: var(--jarak-2);
+    margin: 0 0 var(--jarak-4);
+    padding: 0;
+    list-style: none;
+}
+
+.daftar-tautan__item {
+    padding: var(--jarak-3) var(--jarak-4);
+    border: var(--lebar-garis) solid var(--warna-garis-input);
+    border-radius: var(--radius-kartu);
+    transition: background var(--transisi-cepat), border-color var(--transisi-cepat);
+}
+
+.daftar-tautan__item:has(.daftar-tautan__kotak:checked) {
+    border-color: var(--warna-smart-navy);
+    background: var(--warna-smart-biru);
+}
+
+.daftar-tautan__baris {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--jarak-3);
+}
+
+.daftar-tautan__pilih {
+    display: flex;
+    align-items: center;
+    padding-top: var(--jarak-1);
+    cursor: pointer;
+}
+
+.daftar-tautan__kotak {
+    width: 1.15em;
+    height: 1.15em;
+    flex: none;
+    accent-color: var(--warna-smart-navy);
+    cursor: pointer;
+}
+
+.daftar-tautan__isi {
+    display: flex;
+    flex-direction: column;
+    gap: var(--jarak-1);
+    flex: 1 1 12rem;
+    min-width: 0;
+}
+
+.daftar-tautan__slug {
+    color: var(--warna-smart-navy);
+    font-size: var(--teks-sm);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.daftar-tautan__tujuan {
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-xs);
+    overflow-wrap: anywhere;
+}
+
+.daftar-tautan__tanda {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--jarak-1);
+    margin-top: var(--jarak-1);
+}
+
+.tanda {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--jarak-1);
+    padding: var(--jarak-1) var(--jarak-2);
+    border-radius: var(--radius-pil);
+    color: var(--warna-teks-lembut);
+    background: var(--warna-garis);
+    font-size: var(--teks-xs);
+    font-weight: 600;
+}
+
+.tanda--mati {
+    color: var(--warna-bahaya);
+    background: var(--warna-bahaya-latar);
+}
+
+.tanda--pilih {
+    color: var(--warna-smart-navy);
+    background: var(--warna-smart-kartu);
+}
+
+.daftar-tautan__aksi {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--jarak-2);
+}
+
+.daftar-tautan__kosong {
+    padding: var(--jarak-4);
+    margin: 0 0 var(--jarak-4);
+    border: var(--lebar-garis) dashed var(--warna-garis-input);
+    border-radius: var(--radius-kartu);
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-sm);
+}
+
+/* Tombol aksi sekunder: salin, sunting, dan hapus. */
+
+.tombol-aksi {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--jarak-1);
+    padding: var(--jarak-2) var(--jarak-3);
+    border: var(--lebar-garis) solid var(--warna-garis-input);
+    border-radius: var(--radius-pil);
+    color: var(--warna-smart-navy);
+    background: var(--warna-smart-kartu);
+    font: inherit;
+    font-size: var(--teks-xs);
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: border-color var(--transisi-cepat), color var(--transisi-cepat);
+}
+
+.tombol-aksi:hover {
+    border-color: var(--warna-smart-navy);
+}
+
+.tombol-aksi--bahaya {
+    color: var(--warna-bahaya);
+}
+
+.tombol-aksi--bahaya:hover {
+    border-color: var(--warna-bahaya);
+}
+
+/* Formulir sunting yang dibuka di dalam baris tautan. */
+
+.sunting {
+    display: flex;
+    flex-direction: column;
+    gap: var(--jarak-2);
+    margin-top: var(--jarak-3);
+    padding-top: var(--jarak-3);
+    border-top: var(--lebar-garis) solid var(--warna-garis-input);
+}
+
+.sunting__judul {
+    margin: 0;
+    color: var(--warna-smart-navy);
+    font-size: var(--teks-sm);
+    font-weight: 600;
+}
+
+.sunting .panel-opsi {
+    margin-bottom: 0;
+}
+
+.sunting__aksi,
+.profil-form__aksi {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--jarak-2);
+}
+
+.sunting__aksi .tombol-utama,
+.profil-form__aksi .tombol-utama {
+    flex: 1 1 12rem;
+}
+
+/* Panel QR yang dibuka di dalam baris tautan. */
+
+.qr-tautan {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--jarak-4);
+    margin-top: var(--jarak-3);
+    padding-top: var(--jarak-3);
+    border-top: var(--lebar-garis) solid var(--warna-garis-input);
+}
+
+.qr-tautan__gambar {
+    width: var(--lebar-qr);
+    height: var(--lebar-qr);
+    border-radius: var(--radius-kartu);
+    background: var(--warna-smart-kartu);
+}
+
+.qr-tautan__isi {
+    display: flex;
+    flex-direction: column;
+    gap: var(--jarak-2);
+    flex: 1 1 12rem;
+    min-width: 0;
+}
+
+.qr-tautan__judul {
+    margin: 0;
+    color: var(--warna-smart-navy);
+    font-size: var(--teks-sm);
+    font-weight: 600;
+    overflow-wrap: anywhere;
+}
+
+.qr-tautan__aksi {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--jarak-2);
+}
+
+/*
+    Kartu 4: pratinjau halaman Linktree publik yang akan dilihat pengunjung.
+*/
+
+.tinjauan {
+    display: flex;
+    justify-content: center;
+}
+
+.tinjauan__alamat {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--jarak-3);
+    margin-top: var(--jarak-5);
+    padding-top: var(--jarak-4);
+    border-top: var(--lebar-garis) solid var(--warna-garis);
+}
+
+.tinjauan__url {
+    flex: 1 1 12rem;
+    color: var(--warna-smart-navy);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+
+/* Tautan lanjut dari kartu pemendek ke kartu Linktree. */
+
+.lanjut-linktree {
+    margin: var(--jarak-3) 0 0;
+    font-size: var(--teks-sm);
+}
+
+.lanjut-linktree a {
+    color: var(--warna-smart-navy);
+    font-weight: 600;
+}
+
+/* Layar lebih lebar: 40rem, rujukan yang sama dengan beranda. */
+
+@media (min-width: 40rem) {
+    .statistik {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .daftar-tautan__item,
+    .tombol-aksi,
+    .kartu__lipat .ikon {
+        transition: none;
+    }
+}
+
+/* Banner mode impersonasi: terlihat di atas bilah merek selama admin masuk
+   sebagai pengguna. Tombol kembali mengakhiri sesi impersonasi. */
+
+.bilah-impersonasi {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--jarak-3);
+    padding: var(--jarak-2) var(--jarak-4);
+    background: var(--warna-bahaya-latar);
+    color: var(--warna-bahaya);
+    font-size: var(--teks-sm);
+    text-align: center;
+}
+
+.bilah-impersonasi__form {
+    margin: 0;
+}
+
+.bilah-impersonasi__tombol {
+    padding: var(--jarak-1) var(--jarak-3);
+    border: 1px solid currentColor;
+    border-radius: var(--radius-pil);
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.bilah-impersonasi__tombol:hover {
+    background: var(--warna-bahaya);
+    color: #FFFFFF;
+}
+
+.zona-waktu {
+    margin-top: var(--jarak-4);
+    padding: var(--jarak-4);
+    border: 1px solid var(--warna-garis);
+    border-radius: var(--radius-kartu);
+    background: var(--warna-permukaan-lembut);
+}
+
+.zona-waktu__kepala {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--jarak-2);
+    margin-bottom: var(--jarak-3);
+}
+
+.zona-waktu__sekarang {
+    font-variant-numeric: tabular-nums;
+}
+
+.zona-waktu__form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--jarak-2);
+}
+
+.zona-waktu__form select {
+    flex: 1 1 18rem;
+    min-width: 0;
+}
+
+.pesan-berhasil {
+    margin: var(--jarak-2) 0 0;
+    color: var(--warna-berhasil);
+    font-weight: 600;
+}
+
+/* Rentang analitik Dashboard pengguna. */
+
+.periode {
+    display: inline-flex;
+    gap: var(--jarak-1);
+    margin: var(--jarak-3) 0 var(--jarak-4);
+    padding: var(--jarak-1);
+    border-radius: var(--radius-pil);
+    background: var(--warna-smart-biru);
+}
+
+.periode__tombol {
+    padding: var(--jarak-1) var(--jarak-3);
+    border: 0;
+    border-radius: var(--radius-pil);
+    background: transparent;
+    color: var(--warna-teks-lembut);
+    font: inherit;
+    font-size: var(--teks-sm);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.periode__tombol--aktif {
+    background: var(--warna-smart-navy);
+    color: #FFFFFF;
+}
+
+/* Kartu tren klik penuh. */
+
+.tren {
+    margin-top: var(--jarak-4);
+    padding: var(--jarak-4);
+    border: 1px solid var(--warna-garis);
+    border-radius: var(--radius-kartu);
+    background: var(--warna-permukaan-lembut);
+}
+
+.tren__kepala {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--jarak-2);
+}
+
+.tren__total {
+    display: block;
+    margin-top: var(--jarak-1);
+    color: var(--warna-smart-navy);
+    font-size: var(--teks-xl);
+    font-variant-numeric: tabular-nums;
+}
+
+.tren__svg {
+    width: 100%;
+    height: 6rem;
+    margin-top: var(--jarak-3);
+    overflow: visible;
+}
+
+.tren__garis {
+    fill: none;
+    stroke: var(--warna-aksen);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
+}
+
+.tren__kaki {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: var(--jarak-2);
+    margin-top: var(--jarak-2);
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-xs);
+}
+
+.kartu__catatan {
+    margin: var(--jarak-2) 0 0;
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-xs);
+    line-height: 1.5;
+}
+
+/* Panel analitik tambahan pada Dashboard pengguna. */
+
+.panel-analitik {
+    margin-top: var(--jarak-4);
+    padding: var(--jarak-4);
+    border: 1px solid var(--warna-garis);
+    border-radius: var(--radius-kartu);
+    background: var(--warna-permukaan-lembut);
+}
+
+.panel-analitik__kepala {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--jarak-2);
+    margin-bottom: var(--jarak-3);
+}
+
+.panel-analitik__judul {
+    margin: 0;
+    color: var(--warna-smart-navy);
+    font-size: var(--teks-md);
+}
+
+.panel-analitik__catatan {
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-xs);
+}
+
+.panel-analitik__tautan {
+    color: var(--warna-aksen);
+    font-size: var(--teks-sm);
+    font-weight: 600;
+}
+
+.panel-analitik__kosong {
+    margin: var(--jarak-2) 0 0;
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-sm);
+}
+
+.aktivitas {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: var(--jarak-4);
+}
+
+.aktivitas__subjudul {
+    margin: 0 0 var(--jarak-2);
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-xs);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.sumber {
+    display: grid;
+    grid-template-columns: minmax(4rem, 1fr) 2fr auto;
+    align-items: center;
+    gap: var(--jarak-2);
+    margin-bottom: var(--jarak-1);
+    font-size: var(--teks-xs);
+}
+
+.sumber__label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.sumber__bar {
+    height: 0.4rem;
+    overflow: hidden;
+    border-radius: var(--radius-pil);
+    background: var(--warna-smart-biru);
+}
+
+.sumber__bar > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--warna-aksen);
+}
+
+.sumber__angka {
+    color: var(--warna-teks-lembut);
+    font-variant-numeric: tabular-nums;
+}
+
+.kualitas__bar {
+    height: 0.6rem;
+    overflow: hidden;
+    border-radius: var(--radius-pil);
+    background: var(--warna-bahaya-latar);
+}
+
+.kualitas__bar > span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--warna-sukses);
+}
+
+.kualitas__teks {
+    margin: var(--jarak-2) 0;
+    font-size: var(--teks-sm);
+}
+
+.kualitas__rincian {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--jarak-2);
+    padding: var(--jarak-1) 0;
+    border-top: 1px solid var(--warna-garis);
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-xs);
+}
+
+.jam {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 3.5rem;
+    margin-top: var(--jarak-2);
+}
+
+.jam__batang {
+    flex: 1 1 0;
+    min-height: 2px;
+    border-radius: var(--radius-pil) var(--radius-pil) 0 0;
+    background: var(--warna-aksen);
+}
+
+.jam__sumbu {
+    display: flex;
+    justify-content: space-between;
+    margin-top: var(--jarak-1);
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-xs);
+}
+
+.kesehatan {
+    display: grid;
+    gap: var(--jarak-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.kesehatan__item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--jarak-3);
+    width: 100%;
+    padding: var(--jarak-3);
+    border: 1px solid var(--warna-garis);
+    border-radius: var(--radius-kontrol);
+    background: var(--warna-kartu);
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.kesehatan__item:hover {
+    border-color: var(--warna-aksen);
+}
+
+.kesehatan__jumlah {
+    display: grid;
+    place-items: center;
+    min-width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--warna-bahaya-latar);
+    color: var(--warna-bahaya);
+    font-size: var(--teks-sm);
+    font-weight: 700;
+}
+
+.kesehatan__judul,
+.kesehatan__pesan {
+    display: block;
+}
+
+.kesehatan__judul {
+    font-size: var(--teks-sm);
+}
+
+.kesehatan__pesan {
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-xs);
+}
+
+.statistik--kecil {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    margin-bottom: var(--jarak-3);
+}
+
+.statistik--kecil .statistik__angka {
+    font-size: var(--teks-base);
+}
+
+.aktivitas-terbaru {
+    display: grid;
+    gap: var(--jarak-1);
+    margin: var(--jarak-3) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.aktivitas-terbaru__item {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--jarak-2);
+    padding: var(--jarak-2) 0;
+    border-top: 1px solid var(--warna-garis);
+    font-size: var(--teks-xs);
+}
+
+.aktivitas-terbaru__status {
+    color: var(--warna-teks-lembut);
+}
+

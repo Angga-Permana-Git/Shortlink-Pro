@@ -2,8 +2,10 @@
 
 namespace App\Filament\User\Resources\ShortUrlResource\Pages;
 
+use App\Dto\CreateShortUrlDTO;
 use App\Filament\User\Resources\ShortUrlResource;
 use App\Services\ShortUrl\ShortUrlService;
+use App\Services\Time\UserTimezoneService;
 use App\Support\SlugGenerator;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
@@ -15,27 +17,25 @@ class CreateShortUrl extends CreateRecord
 
     protected function handleRecordCreation(array $data): Model
     {
-        $raw = (string) ($data['_slug'] ?? '');
-        $slug = $this->normalizeSlug($raw);
+        $slug = $this->normalizeSlug((string) ($data['_slug'] ?? ''));
+        $pengguna = auth()->user();
+        $waktu = app(UserTimezoneService::class);
 
-        $customSlug = SlugGenerator::isCustomSlugValid($slug)
-            ? $slug
-            : null;
+        $payload = new CreateShortUrlDTO(
+            destinationUrl: (string) $data['destination_url'],
+            customSlug: SlugGenerator::isCustomSlugValid($slug) ? $slug : null,
+            isActive: (bool) ($data['is_active'] ?? true),
+            startsAt: $waktu->keServer($data['starts_at'] ?? null, $pengguna),
+            expiresAt: $waktu->keServer($data['expires_at'] ?? null, $pengguna),
+            password: ($data['_protected'] ?? false) ? ($data['_password'] ?? null) : null,
+        );
 
-        $service = app(ShortUrlService::class);
-
-        $shortUrl = $service->create(auth()->user(), [
-            'destination_url' => $data['destination_url'],
-            'is_active' => $data['is_active'] ?? true,
-            'starts_at' => $data['starts_at'] ?? null,
-            'expires_at' => $data['expires_at'] ?? null,
-            'password' => ($data['_protected'] ?? false) ? ($data['_password'] ?? null) : null,
-        ], $customSlug);
+        $shortUrl = app(ShortUrlService::class)->create($pengguna, $payload);
 
         Notification::make()
             ->success()
-            ->title('Link created')
-            ->body('Short URL: '.$shortUrl->shortUrl())
+            ->title('Tautan berhasil dibuat')
+            ->body('Tautan pendek: '.$shortUrl->shortUrl())
             ->send();
 
         return $shortUrl;

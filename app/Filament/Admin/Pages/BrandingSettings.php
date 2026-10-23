@@ -2,15 +2,17 @@
 
 namespace App\Filament\Admin\Pages;
 
+use App\Dto\UpdateBrandingDTO;
 use App\Services\Branding\BrandingService;
+use App\Services\Setting\AccessModeService;
 use BackedEnum;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Illuminate\Support\Facades\Storage;
 
 class BrandingSettings extends Page
 {
@@ -20,13 +22,25 @@ class BrandingSettings extends Page
 
     protected static ?string $title = 'Branding';
 
+    public function getTitle(): string
+    {
+        return __('Branding');
+    }
+
+    public static function getNavigationLabel(): string
+    {
+        return __('Branding');
+    }
+
     public array $data = [];
+
+    public ?string $currentLogoUrl = null;
+
+    public ?string $currentLogoPath = null;
 
     public function mount(): void
     {
-        $this->form->fill([
-            'app_name' => \App\Models\Setting::get('app_name', config('app.name')),
-        ]);
+        $this->refreshForm();
     }
 
     public function form(Schema $schema): Schema
@@ -34,19 +48,22 @@ class BrandingSettings extends Page
         return $schema
             ->schema([
                 TextInput::make('app_name')
-                    ->label('Nama aplikasi')
+                    ->label(__('Nama aplikasi'))
                     ->required()
-                    ->placeholder('cth: Shortlink Pro')
+                    ->placeholder(__('cth: Shortlink Pro'))
                     ->maxLength(255),
+                Toggle::make('force_sso')
+                    ->label(__('Paksa login Keycloak'))
+                    ->helperText(__('Jika aktif, tamu diarahkan ke Keycloak sebelum melihat halaman publik.')),
                 FileUpload::make('login_logo')
-                    ->label('Unggah Logo Baru (PNG/JPG/SVG)')
+                    ->label(__('Unggah Logo Baru (PNG/JPG/SVG)'))
                     ->image()
                     ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/jpg', 'image/svg+xml'])
                     ->maxSize(2048)
                     ->directory('branding')
                     ->disk('public')
                     ->visibility('public')
-                    ->helperText('Ditampilkan di halaman login dan header. Format PNG, JPG, atau SVG. Maksimal 2MB.'),
+                    ->helperText(__('Ditampilkan di halaman login dan header. Format PNG, JPG, atau SVG. Maksimal 2MB.')),
             ])
             ->statePath('data');
     }
@@ -55,46 +72,43 @@ class BrandingSettings extends Page
     {
         $data = $this->form->getState();
 
-        $updateData = [];
+        app(BrandingService::class)->updateBranding(auth()->user(), UpdateBrandingDTO::fromArray([
+            'app_name' => $data['app_name'] ?? null,
+            'login_logo' => $data['login_logo'] ?? null,
+        ]));
 
-        if (! empty($data['app_name'])) {
-            $updateData['app_name'] = $data['app_name'];
-        }
+        app(AccessModeService::class)->setForceSso(auth()->user(), (bool) ($data['force_sso'] ?? false));
 
-        if (! empty($data['login_logo'])) {
-            $updateData['login_logo'] = $data['login_logo'];
-        }
+        $this->refreshForm();
 
-        \App\Models\Setting::set('updated_by', auth()->id());
-
-        app(BrandingService::class)->updateBranding(auth()->user(), $updateData);
-
-        $this->form->fill([
-            'app_name' => \App\Models\Setting::get('app_name', config('app.name')),
-            'login_logo' => null,
-        ]);
-
-        Notification::make()->success()->title('Pengaturan tersimpan')->send();
+        Notification::make()->success()->title(__('Pengaturan tersimpan'))->send();
     }
 
     public function deleteLogo(): void
     {
-        $path = \App\Models\Setting::get('login_logo');
+        app(BrandingService::class)->deleteLogo(auth()->user());
 
-        if ($path && Storage::disk('public')->exists($path)) {
-            Storage::disk('public')->delete($path);
-        }
+        $this->refreshForm();
 
-        \App\Models\Setting::set('login_logo', null);
-        \App\Models\Setting::set('updated_by', auth()->id());
+        Notification::make()->success()->title(__('Logo berhasil dihapus'))->send();
+    }
+
+    /**
+     * Muat ulang form dan pratinjau logo dari pengaturan yang tersimpan.
+     *
+     * Tampilan hanya membaca properti ini, bukan memanggil service sendiri.
+     */
+    private function refreshForm(): void
+    {
+        $branding = app(BrandingService::class);
+
+        $this->currentLogoUrl = $branding->loginLogoUrl();
+        $this->currentLogoPath = $branding->loginLogoPath();
 
         $this->form->fill([
-            'app_name' => \App\Models\Setting::get('app_name', config('app.name')),
+            'app_name' => $branding->appName(),
+            'force_sso' => app(AccessModeService::class)->forceSso(),
             'login_logo' => null,
         ]);
-
-        \App\Services\Audit\AuditLogger::log(auth()->user(), 'branding.logo_delete', 'setting');
-
-        Notification::make()->success()->title('Logo berhasil dihapus secara bersih')->send();
     }
 }

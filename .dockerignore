@@ -42,6 +42,18 @@ bootstrap/cache/*.php
 Thumbs.db
 .DS_Store
 
+# Dokumentasi & catatan agen (tidak dipakai saat runtime)
+*.md
+.aicontext
+
+# Sisa pengujian e2e lokal
+.e2e
+e2e.config.ts
+
+# Berkas cadangan hasil patch manual
+*.bak
+*.bak-*
+
 # Script debug
 check_settings.php
 
@@ -57,3 +69,18 @@ Dockerfile
 docker-compose.yaml
 docker-compose.app.yaml
 docker-compose.db.yaml
+
+# Environment di subfolder (jangan pernah bocor ke image)
+**/.env
+**/.env.local
+**/.env.production
+**/.env.backup
+
+# Folder deploy produksi: hanya berkas yang dipakai build yang ikut konteks.
+# docker-compose, nginx host, README, dan .env tidak perlu masuk image.
+shortlink-pro-dockerapp-nginxhost/*
+!shortlink-pro-dockerapp-nginxhost/Dockerfile
+!shortlink-pro-dockerapp-nginxhost/entrypoint.sh
+!shortlink-pro-dockerapp-nginxhost/php.ini
+!shortlink-pro-dockerapp-nginxhost/apache/
+!shortlink-pro-dockerapp-nginxhost/apache/**

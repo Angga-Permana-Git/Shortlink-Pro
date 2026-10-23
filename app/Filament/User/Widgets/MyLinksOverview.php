@@ -19,15 +19,15 @@ class MyLinksOverview extends StatsOverviewWidget
         $protected = ShortUrl::where('owner_id', $ownerId)->whereNotNull('password_hash')->count();
 
         return [
-            Stat::make('Total Link', $total)
+            Stat::make('Total Tautan', $total)
                 ->icon('heroicon-o-link'),
-            Stat::make('Link Aktif', $active)
+            Stat::make('Tautan Aktif', $active)
                 ->icon('heroicon-o-check-circle')
                 ->color('success'),
             Stat::make('Total Klik', $clicks)
                 ->icon('heroicon-o-cursor-arrow-rays')
                 ->color('info'),
-            Stat::make('Link Terproteksi', $protected)
+            Stat::make('Tautan Terlindungi', $protected)
                 ->icon('heroicon-o-lock-closed')
                 ->color('warning'),
         ];

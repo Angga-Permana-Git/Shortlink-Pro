@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Filament\Admin\Pages\BrandingSettings;
 use App\Models\Setting;
 use App\Models\User;
+use App\Services\Branding\BrandingService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -46,7 +47,7 @@ class BrandingTest extends TestCase
     {
         Setting::set('login_logo', 'branding/test-logo.png');
 
-        $logoUrl = app(\App\Services\Branding\BrandingService::class)->loginLogoUrl();
+        $logoUrl = app(BrandingService::class)->loginLogoUrl();
 
         $this->assertStringContainsString('/storage/branding/test-logo.png', $logoUrl);
     }

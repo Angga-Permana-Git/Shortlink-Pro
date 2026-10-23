@@ -3,7 +3,6 @@
 namespace Tests\Feature;
 
 use App\Filament\Admin\Resources\UserResource\Pages\EditUser;
-use App\Models\RoleChangeLog;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;

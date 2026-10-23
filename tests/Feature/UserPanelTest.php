@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Filament\User\Resources\ShortUrlResource\Pages\CreateShortUrl;
 use App\Filament\User\Resources\ShortUrlResource\Pages\EditShortUrl;
-use App\Models\AuditLog;
 use App\Models\ShortUrl;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -99,7 +98,7 @@ class UserPanelTest extends TestCase
 
         $this->assertDatabaseHas('audit_logs', [
             'actor_id' => $user->id,
-            'action' => 'update',
+            'action' => 'link.update',
             'resource_type' => 'short_url',
             'resource_id' => $link->id,
         ]);

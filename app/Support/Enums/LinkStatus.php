@@ -13,11 +13,11 @@ enum LinkStatus: string
     public function label(): string
     {
         return match ($this) {
-            self::Active => 'Active',
-            self::Inactive => 'Inactive',
-            self::Expired => 'Expired',
-            self::Scheduled => 'Scheduled',
-            self::Protected => 'Protected',
+            self::Active => __('Aktif'),
+            self::Inactive => __('Nonaktif'),
+            self::Expired => __('Kedaluwarsa'),
+            self::Scheduled => __('Terjadwal'),
+            self::Protected => __('Dilindungi'),
         };
     }
 }

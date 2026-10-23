@@ -29,7 +29,7 @@ class ShortUrlPolicy
 
     public function delete(User $user, ShortUrl $shortUrl): bool
     {
-        return $user->isAdmin();
+        return $user->isAdmin() || $shortUrl->owner_id === $user->id;
     }
 
     public function toggle(User $user, ShortUrl $shortUrl): bool

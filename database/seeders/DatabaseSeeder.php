@@ -3,12 +3,15 @@
 namespace Database\Seeders;
 
 use App\Models\ClickEvent;
+use App\Models\Setting;
 use App\Models\ShortUrl;
 use App\Models\User;
 use App\Support\Enums\ClickStatus;
 use App\Support\Enums\Role;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
@@ -16,12 +19,15 @@ class DatabaseSeeder extends Seeder
 
     public function run(): void
     {
+        $demoPassword = (string) (config('app.demo_account_password') ?: Str::random(32));
+
         $admin = User::firstOrCreate(
             ['email' => 'admin@company.local'],
             [
                 'name' => 'Administrator',
                 'username' => 'admin',
-                'password' => 'password',
+                'password' => Hash::make($demoPassword),
+                'auth_provider' => 'local',
                 'role' => Role::Admin->value,
                 'is_active' => true,
             ]
@@ -32,7 +38,8 @@ class DatabaseSeeder extends Seeder
             [
                 'name' => 'User Biasa',
                 'username' => 'user',
-                'password' => 'password',
+                'password' => Hash::make($demoPassword),
+                'auth_provider' => 'local',
                 'role' => Role::User->value,
                 'is_active' => true,
             ]
@@ -67,5 +74,7 @@ class DatabaseSeeder extends Seeder
             $link1->total_clicks = $link1->clicks()->where('status', ClickStatus::Success->value)->count();
             $link1->save();
         }
+
+        Setting::set('force_sso', false);
     }
 }

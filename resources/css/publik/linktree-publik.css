@@ -1,0 +1,111 @@
+/*
+    Gaya halaman profil publik Linktree (/u/{username}).
+
+    Lebar kartu memakai min() sehingga tidak perlu media query. Tautan yang
+    dibagikan pengguna memakai token yang sama dengan halaman lain.
+*/
+
+.halaman-profil {
+    display: flex;
+    justify-content: center;
+    padding: var(--jarak-6) var(--jarak-4);
+    background: var(--gradien-smart);
+}
+
+.profil {
+    width: min(var(--lebar-formulir), 100%);
+    padding: var(--jarak-6) var(--jarak-5);
+    border-radius: var(--radius-kartu-besar);
+    background: var(--warna-smart-kartu);
+    box-shadow: var(--bayang-smart);
+    text-align: center;
+}
+
+.profil__lambang {
+    display: grid;
+    place-items: center;
+    width: 5rem;
+    height: 5rem;
+    margin-inline: auto;
+    border-radius: var(--radius-kartu-besar);
+    color: var(--warna-smart-kartu);
+    background: linear-gradient(135deg, var(--warna-smart-navy) 0%, var(--warna-aksen) 100%);
+    font-size: var(--teks-judul);
+    font-weight: 700;
+}
+
+/* Logo unggahan pengguna mengisi penuh lambang; tanpa logo, huruf pertama nama
+   tetap tampil sebagai gantinya. */
+
+.profil__lambang-gambar {
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+    object-fit: cover;
+}
+
+.profil__nama {
+    margin: var(--jarak-4) 0 var(--jarak-2);
+    color: var(--warna-smart-navy);
+    font-size: var(--teks-xl);
+}.profil__bio {
+    margin: 0 0 var(--jarak-2);
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-sm);
+}
+
+.profil__daftar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--jarak-3);
+    padding: 0;
+    margin: var(--jarak-6) 0 0;
+    list-style: none;
+}
+
+.profil__tombol {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--jarak-2);
+    padding: var(--jarak-4);
+    border-radius: var(--radius-pil);
+    color: var(--warna-smart-kartu);
+    background: var(--warna-smart-navy);
+    font-size: var(--teks-sm);
+    font-weight: 600;
+    text-decoration: none;
+    transition: background var(--transisi-cepat);
+}
+
+.profil__tombol:hover {
+    background: var(--warna-smart-navy-gelap);
+}
+
+.profil__kosong {
+    padding: var(--jarak-4);
+    border: var(--lebar-garis) dashed var(--warna-garis-input);
+    border-radius: var(--radius-kartu);
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-sm);
+}
+
+.profil__kaki {
+    margin-top: var(--jarak-6);
+    color: var(--warna-teks-lembut);
+    font-size: var(--teks-xs);
+}
+
+.profil__kaki a {
+    text-decoration: none;
+}
+
+.profil__kaki a:hover {
+    text-decoration: underline;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .profil__tombol {
+        transition: none;
+    }
+}
