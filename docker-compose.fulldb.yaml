@@ -183,7 +183,11 @@ services:
         depends_on:
             db:
                 condition: service_healthy
+        # Docker tidak menerbitkan port untuk container yang HANYA berada di
+        # network `internal: true`, jadi phpMyAdmin ikut network `egress`
+        # (butuh `backend` untuk menjangkau db). Tetap hanya loopback.
         networks:
+            - egress
             - backend
         security_opt:
             - no-new-privileges:true
