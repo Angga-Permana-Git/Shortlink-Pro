@@ -125,9 +125,13 @@ ln -sfn "/etc/nginx/sites-available/${SITE_NAME}.conf" \
 nginx -t
 
 if systemctl is-active --quiet nginx 2>/dev/null; then
-    systemctl reload nginx
+    # `reload` bisa gagal tanpa pesan saat alamat `listen` berubah (misalnya
+    # 0.0.0.0:80 menjadi 127.0.0.1:80) karena soket lama masih dipegang master,
+    # sehingga konfigurasi baru tidak terpakai. `restart` memaksa rebind.
+    systemctl restart nginx
 else
-    nginx -s reload
+    nginx -s stop 2>/dev/null || true
+    nginx
 fi
 
 echo "Konfigurasi terpasang: /etc/nginx/sites-available/${SITE_NAME}.conf"

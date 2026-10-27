@@ -43,6 +43,24 @@ Migrasi
 
 ---
 
+[2026-10-27] nginx host terpasang sebagai reverse proxy origin
+
+Ditambahkan
+- nginx 1.24.0 (Ubuntu) di server lab; site `shortlink-pro` aktif dengan `listen 127.0.0.1:80`, `server_name 172.2.18.52`, `proxy_pass http://127.0.0.1:9000`.
+
+Diubah
+- `install.sh` memakai `systemctl restart nginx` (bukan `reload`) setelah memasang site.
+- `Cara_Pakai_Docker.md` §6 menambahkan langkah pasang paket nginx, hapus site `default`, dan uji `curl -H "Host: ..." http://127.0.0.1/up`; tabel troubleshooting mendapat baris "nginx tetap menyajikan halaman default".
+
+Diperbaiki
+- Setelah `install.sh`, nginx tetap menyajikan halaman default sehingga `curl -H "Host: 172.2.18.52" http://127.0.0.1/up` mengembalikan 404 dari nginx meski `nginx -t` lolos.
+- **Akar masalah:** `systemctl reload nginx` hanya mengirim sinyal lalu keluar dengan status 0, sedangkan master gagal `bind()` ke `127.0.0.1:80` karena soket lama `0.0.0.0:80` masih dipegang: `[emerg] bind() to 127.0.0.1:80 failed (98: Address already in use)` → konfigurasi baru tidak pernah dipakai. `restart` memaksa rebind.
+
+**Berkas:** `install.sh`, `Cara_Pakai_Docker.md`, `.aicontext/activetodo.md`
+**Verifikasi:** `nginx -t` OK; `ss -lntp` hanya memuat `127.0.0.1:80` dan `127.0.0.1:9000` (tidak ada listener publik); lewat nginx `GET /up` 200, `GET /` 200, `GET /login` 302 → `/login/local` 200; `POST /shorten` 201 menghasilkan URL `https://172.2.18.52/<slug>` (karena `X-Forwarded-Proto https`), `GET /<slug>` 302 ke tujuan, `GET /qr/<slug>` 200 `image/svg+xml`.
+
+---
+
 [2026-10-27] Paket deploy Docker disatukan di root repo
 
 Perlu Perhatian
