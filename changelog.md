@@ -59,7 +59,7 @@ Diperbaiki
 - **Alasan:** pengguna membutuhkan cara mengelola database tanpa membukanya ke internet.
 
 **Berkas:** `docker-compose.fulldb.yaml`, `.env.example`, `Cara_Pakai_Docker.md`
-**Verifikasi:** `docker port` → `80/tcp -> 127.0.0.1:8081`; `ss -lntp` memuat `127.0.0.1:8081`; `GET http://127.0.0.1:8081/` 200 dengan `<title>phpMyAdmin</title>`; koneksi dari container ke `db` memakai kredensial `.env` berhasil dan membaca 19 tabel; port publik tetap hanya `127.0.0.1:80` dan `127.0.0.1:9000`.
+**Verifikasi:** `docker port` → `80/tcp -> 127.0.0.1:8081`; `ss -lntp` memuat `127.0.0.1:8081`; `GET http://127.0.0.1:8081/` 200 dengan `<title>phpMyAdmin</title>`; dari dalam container `phpmyadmin`, login ke host `db` berhasil untuk `shortlink` (user aplikasi, 19 tabel terbaca) maupun `root` (kata sandi dari `secrets/db_root_password.txt`); port publik tetap hanya `127.0.0.1:80` dan `127.0.0.1:9000`.
 
 ---
 
