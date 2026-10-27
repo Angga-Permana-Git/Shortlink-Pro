@@ -43,6 +43,27 @@ Migrasi
 
 ---
 
+[2026-10-27] Dokumentasi dipilih: hanya dokumen alur pengembangan yang dilacak Git
+
+Perlu Perhatian
+- Repo GitHub sekarang tidak lagi memuat `README.md`, `SECURITY.md`, `GOOGLE_SETUP.md`, `KEYCLOAK_SETUP.md`, `Cara_Pakai_Docker.md`, dan `shortlink-pro-dockerapp-nginxhost/README.md`. Berkasnya **tetap ada di disk** dan tidak dihapus; cukup `git add` kembali bila suatu saat perlu dilacak.
+- Ini menyalahi §8 aturan_pengembangan.md (dokumen harus tetap sinkron di repo). Diputuskan mengikuti instruksi langsung pengguna, yang menurut §1 aturan_pengembangan.md didahulukan atas dokumen.
+- Kode aplikasi tidak tersentuh sama sekali. Perubahan murni pada pelacakan Git dan `.gitignore`.
+
+Ditambahkan
+- Blok abaikan di `.gitignore`: `*.md` lalu pengecualian `!PRDapp.md`, `!aturan_pengembangan.md`, `!disiplin_struktur.md`, `!disiplin_coding.md`, `!aicontext.md`, `!changelog.md`, `!uji_e2e.md`. Berkas `.md` baru apa pun tidak akan masuk repo kecuali sengaja ditambahkan.
+
+Dihapus
+- Enam berkas dokumentasi dari pelacakan Git (`git rm --cached`): `README.md`, `SECURITY.md`, `GOOGLE_SETUP.md`, `KEYCLOAK_SETUP.md`, `Cara_Pakai_Docker.md`, `shortlink-pro-dockerapp-nginxhost/README.md`.
+
+Diubah
+- **Alasan:** pengguna ingin repo hanya berisi aplikasi beserta aturan main; panduan setup pihak ketiga dan panduan deploy dinilai cukup disimpan lokal.
+
+**Berkas:** `.gitignore`, `changelog.md`
+**Verifikasi:** `git ls-files "*.md"` menyisakan tepat 7 berkas (7 dokumen alur); `git check-ignore --no-index -v` mengonfirmasi 6 berkas buangan kena `.gitignore:39 *.md` dan 7 dokumen alur dikembalikan oleh aturan negasi (baris 40-46); pemeriksaan seluruh berkas terlacak tidak menemukan berkas yang jadi terabaikan; `pint --test` passed; `php artisan test` 218 passed (863 assertions).
+
+---
+
 [2026-10-27] Persiapan push ke GitLab: `.gitignore` + README keadaan terkini
 
 Perlu Perhatian

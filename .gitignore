@@ -31,6 +31,20 @@ PRDSSO.md
 PRD.md
 PROJECT_ANALYSIS.md
 
+# ==========================================================================
+# Dokumentasi: hanya dokumen alur pengembangan yang dilacak.
+# Panduan setup pihak ketiga, panduan Docker, README, dan SECURITY cukup
+# disimpan lokal supaya repo hanya berisi kode aplikasi dan aturan main.
+# ==========================================================================
+*.md
+!PRDapp.md
+!aturan_pengembangan.md
+!disiplin_struktur.md
+!disiplin_coding.md
+!aicontext.md
+!changelog.md
+!uji_e2e.md
+
 # Database SQLite (data lokal, bukan source code)
 database/database.sqlite
 
