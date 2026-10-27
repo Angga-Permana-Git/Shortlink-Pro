@@ -43,6 +43,26 @@ Migrasi
 
 ---
 
+[2026-10-28] phpMyAdmin opsional untuk mengakses database
+
+Ditambahkan
+- Service `phpmyadmin` (`phpmyadmin:5-apache`) di `docker-compose.fulldb.yaml` dengan profil `tools`, port loopback `127.0.0.1:${PMA_PORT:-8081}`, `PMA_HOST=db`, `UPLOAD_LIMIT=64M`.
+- `PMA_PORT=8081` di `.env.example`.
+- `Cara_Pakai_Docker.md` §10: subbagian "phpMyAdmin (opsional, hanya loopback)" beserta perintah SSH tunnel.
+
+Diubah
+- Service `phpmyadmin` terhubung ke network `egress` **dan** `backend`.
+
+Diperbaiki
+- Container `phpmyadmin` berjalan tetapi port 8081 tidak mendengarkan (`NetworkSettings.Ports` = `null`, `docker port` kosong) sehingga `curl http://127.0.0.1:8081/` gagal (kode `000`).
+- **Akar masalah:** container hanya terhubung ke network `backend` yang bertanda `internal: true`; Docker tidak menerbitkan port host untuk container yang seluruh network-nya internal. Menambahkan network `egress` membuat pemetaan `80/tcp -> 127.0.0.1:8081` benar-benar dibuat.
+- **Alasan:** pengguna membutuhkan cara mengelola database tanpa membukanya ke internet.
+
+**Berkas:** `docker-compose.fulldb.yaml`, `.env.example`, `Cara_Pakai_Docker.md`
+**Verifikasi:** `docker port` → `80/tcp -> 127.0.0.1:8081`; `ss -lntp` memuat `127.0.0.1:8081`; `GET http://127.0.0.1:8081/` 200 dengan `<title>phpMyAdmin</title>`; koneksi dari container ke `db` memakai kredensial `.env` berhasil dan membaca 19 tabel; port publik tetap hanya `127.0.0.1:80` dan `127.0.0.1:9000`.
+
+---
+
 [2026-10-27] nginx host terpasang sebagai reverse proxy origin
 
 Ditambahkan
