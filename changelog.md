@@ -43,6 +43,24 @@ Migrasi
 
 ---
 
+[2026-10-28] Samakan zona waktu server, container, dan aplikasi ke Asia/Jakarta (WIB)
+
+⚠️ Perlu Perhatian
+- Data lama ditulis saat aplikasi masih memakai `UTC`. Setelah `APP_TIMEZONE=Asia/Jakarta`, nilai `timestamp` yang sudah ada terbaca 7 jam lebih awal. Pada server ini seluruh kolom `timestamp` digeser `+ INTERVAL 7 HOUR` sekali (backup: `/home/lab/backup-shortlink-pro-<stamp>.sql`). Server lain yang sudah berisi data perlu perlakuan sama, atau dibiarkan bila datanya belum berarti.
+- Kolom `timestamp` MySQL tetap disimpan/dibaca pada zona sesi `UTC` (`@@system_time_zone = UTC`), jadi tidak ada pergeseran ganda: aplikasi menulis jam WIB apa adanya, dan membacanya kembali sebagai WIB.
+
+Diubah
+- Host: `sudo timedatectl set-timezone Asia/Jakarta` → `Time zone: Asia/Jakarta (WIB, +0700)`; NTP tetap aktif (`System clock synchronized: yes`).
+- `.env`: `APP_TIMEZONE=Asia/Jakarta` dan `TZ=Asia/Jakarta` (keduanya belum ada sebelumnya, sehingga Laravel memakai default `UTC`). `TZ` masuk ke container lewat `env_file`, jadi `app` dan `scheduler` otomatis memakai WIB tanpa perubahan compose.
+- Container dibuat ulang dengan `docker compose up -d app scheduler` (bukan `restart`) agar `env_file` dibaca ulang.
+- `.env.example`: `TZ=Asia/Jakarta` ditambahkan di blok Compose dan komentar pada `APP_TIMEZONE`.
+- `Cara_Pakai_Docker.md` §4: baris `APP_TIMEZONE` dan `TZ` masuk tabel variabel wajib.
+
+**Berkas:** `.env` (server, tidak di-commit), `.env.example`, `changelog.md`, `Cara_Pakai_Docker.md`
+**Verifikasi:** host `date` = `2026-10-28 02:03:47 WIB`; container `date` = `WIB +0700` dengan `TZ=Asia/Jakarta` (app dan scheduler); Laravel `config('app.timezone')` = `Asia/Jakarta`, `now()` = `2026-10-28 02:05:21 (Asia/Jakarta)`, `now()->utc()` = `2026-10-27 19:05:21`; `schedule:list` menampilkan "Next Due" dalam jam lokal; `GET /up` 200 dan keempat container `running`.
+
+---
+
 [2026-10-28] Perbaiki tampilan hancur saat diakses lewat SSH tunnel (port hilang di URL aset)
 
 ⚠️ Perlu Perhatian
