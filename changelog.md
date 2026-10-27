@@ -43,6 +43,23 @@ Migrasi
 
 ---
 
+[2026-10-28] Akses browser dari komputer lain + skema URL yang benar
+
+Diubah
+- `nginx/shortlink-pro.conf`: `X-Forwarded-Proto` tidak lagi di-hardcode `https`, melainkan `map $http_x_forwarded_proto $forwarded_proto_shortlink { default $http_x_forwarded_proto; '' $scheme; }`. `X-Forwarded-Port` mengikuti skema lewat `map $forwarded_proto_shortlink $forwarded_port_shortlink { default 443; http 80; }`.
+- Site terpasang dengan `listen 80` (semua antarmuka) untuk sementara agar browser di komputer lain bisa membuka `http://172.2.18.52/`; sebelumnya `listen 127.0.0.1:80`.
+- `Cara_Pakai_Docker.md` §6: subbagian "Skema URL yang diteruskan" dan "Mengakses tanpa Cloudflare (LAN / uji lokal)"; tabel troubleshooting mendapat baris `ERR_CONNECTION_REFUSED` dari browser komputer lain.
+
+Diperbaiki
+- Tautan yang dibuat lewat akses HTTP langsung berbunyi `https://172.2.18.52/<slug>` sehingga tidak bisa dibuka (origin tidak punya TLS).
+- **Akar masalah:** header `X-Forwarded-Proto https` di-hardcode untuk kebutuhan Cloudflare, jadi setiap permintaan dianggap https. Setelah memakai `map`, akses HTTP menghasilkan `http://172.2.18.52/<slug>` sedangkan permintaan dengan `X-Forwarded-Proto: https` tetap menghasilkan `https://172.2.18.52/<slug>` (tanpa `:80`).
+- **Alasan tambahan:** `127.0.0.1:9000` dan `127.0.0.1:8081` tidak bisa dibuka dari browser laptop karena keduanya hanya listen di loopback server; perlu SSH tunnel atau `--listen-all`.
+
+**Berkas:** `nginx/shortlink-pro.conf`, `Cara_Pakai_Docker.md`
+**Verifikasi:** dari laptop `http://172.2.18.52/` 200 dan `/up` 200; lewat nginx tanpa header skema, `POST /shorten` 201 menghasilkan `"url":"http://172.2.18.52/<slug>"` dan `GET /<slug>` 302 ke tujuan; dengan `X-Forwarded-Proto: https` (simulasi Cloudflare) menghasilkan `"url":"https://172.2.18.52/<slug>"` tanpa `:80`; SSH tunnel `-L 9000 -L 8081` membuat `http://127.0.0.1:9000/up` dan `http://127.0.0.1:8081/` (phpMyAdmin) merespons 200 dari laptop.
+
+---
+
 [2026-10-28] phpMyAdmin opsional untuk mengakses database
 
 Ditambahkan
