@@ -43,6 +43,26 @@ Migrasi
 
 ---
 
+[2026-10-27] Penyesuaian dokumentasi: `aturan_pengembangan.md` keluar, `README.md` masuk
+
+Perlu Perhatian
+- `aturan_pengembangan.md` tidak lagi dilacak Git. Berkas tetap ada di disk. Akibatnya, repo tidak lagi memuat aturan main; pengembang baru harus mendapat berkas ini terpisah. Tujuh dokumen alur lain tetap dilacak.
+- `README.md` kembali dilacak dan isinya identik dengan versi terakhir (hash blob `c1f13e4`), yaitu versi yang sudah mencantumkan bagian "Akun dan bahasa", "Status Pengembangan", dan struktur proyek terkini.
+
+Ditambahkan
+- Pengecualian `!README.md` di `.gitignore`, supaya panduan repo tetap terlihat di halaman GitHub.
+
+Dihapus
+- `aturan_pengembangan.md` dari pelacakan Git.
+
+Diubah
+- **Alasan:** pengguna menilai aturan pengembangan tidak perlu ada di repo, tetapi panduan penggunaan perlu tampil sebagai halaman depan repository.
+
+**Berkas:** `.gitignore`, `changelog.md`, `README.md`
+**Verifikasi:** `git ls-files "*.md"` menyisakan 7 berkas (`README.md`, `PRDapp.md`, `disiplin_struktur.md`, `disiplin_coding.md`, `aicontext.md`, `changelog.md`, `uji_e2e.md`); `git check-ignore --no-index -v` mengonfirmasi `aturan_pengembangan.md` kena `*.md` tanpa pengecualian; `git hash-object README.md` sama dengan `defbe7c:README.md` (`c1f13e4`); `pint --test` passed; `php artisan test` 218 passed (863 assertions).
+
+---
+
 [2026-10-27] Dokumentasi dipilih: hanya dokumen alur pengembangan yang dilacak Git
 
 Perlu Perhatian

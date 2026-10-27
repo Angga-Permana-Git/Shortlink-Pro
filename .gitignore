@@ -37,8 +37,8 @@ PROJECT_ANALYSIS.md
 # disimpan lokal supaya repo hanya berisi kode aplikasi dan aturan main.
 # ==========================================================================
 *.md
+!README.md
 !PRDapp.md
-!aturan_pengembangan.md
 !disiplin_struktur.md
 !disiplin_coding.md
 !aicontext.md
