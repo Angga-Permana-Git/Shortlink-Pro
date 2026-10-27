@@ -43,6 +43,21 @@ Migrasi
 
 ---
 
+[2026-10-28] Hentikan `URL::forceScheme('https')` pada request HTTP (aset https di halaman http)
+
+⚠️ Perlu Perhatian
+- Setelah `APP_URL` menjadi `https://`, `AppServiceProvider::boot()` memaksa skema https untuk **semua** URL. Akibatnya akses lewat SSH tunnel (`http://127.0.0.1:9000`) meminta aset ke `https://127.0.0.1:9000/build/...` — origin tidak punya TLS, jadi CSS/JS gagal dimuat dan halaman tampil tanpa gaya.
+- Gejala ini juga akan muncul pada mode `install.sh --listen-all` (akses LAN lewat HTTP), yang didokumentasikan sebagai opsi yang sah.
+
+Diperbaiki
+- `app/Providers/AppServiceProvider.php`: guard `forceScheme` ditambah `&& $this->app->runningInConsole()`, sehingga pemaksaan https hanya berlaku di CLI/queue/scheduler — di sana URL memang dibangun dari `APP_URL`.
+- Untuk request HTTP, skema asli sudah benar karena nginx meneruskan `X-Forwarded-Proto` (cloudflared → `https`, akses langsung → `$scheme`). Laravel memakai nilai itu untuk `route()`, `asset()`, dan `url()`.
+
+**Berkas:** `app/Providers/AppServiceProvider.php`, `changelog.md`
+**Verifikasi:** rebuild image lalu restart `app` + `scheduler`; `http://127.0.0.1:9000/login/local` → aset `http://127.0.0.1:9000/build/...`; `https://s.nalar.or.id/login/local` → aset `https://s.nalar.or.id/build/...`; CLI `route('redirect.show','contoh')` → `https://s.nalar.or.id/contoh`; `config('session.secure')` = `true`.
+
+---
+
 [2026-10-28] Kencangkan origin publik: APP_URL, secure cookie, `server_name` eksplisit, dan penolak Host tak dikenal
 
 ⚠️ Perlu Perhatian

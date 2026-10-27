@@ -57,9 +57,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Only force HTTPS when APP_URL is already HTTPS (e.g. production).
-        // In local/HTTP development this is intentionally skipped.
-        if (str_starts_with(config('app.url', ''), 'https://')) {
+        // Paksa HTTPS hanya di luar request HTTP (CLI, queue, scheduler).
+        //
+        // Untuk request HTTP, skema asli sudah diteruskan nginx lewat
+        // `X-Forwarded-Proto` (lihat `nginx/shortlink-pro.conf`), jadi Laravel
+        // tahu sendiri kapan harus menghasilkan https. Memaksa https di sini
+        // membuat akses HTTP yang sah — SSH tunnel `http://127.0.0.1:9000`
+        // maupun mode `install.sh --listen-all` — meminta aset ke
+        // `https://...` padahal origin tidak punya TLS, sehingga halaman
+        // tampil tanpa CSS/JS.
+        //
+        // Konteks CLI/queue tetap dipaksa https karena URL di sana dibangun
+        // dari `APP_URL` (mis. tautan di email dan QR code).
+        if (str_starts_with(config('app.url', ''), 'https://') && $this->app->runningInConsole()) {
             URL::forceScheme('https');
         }
 
