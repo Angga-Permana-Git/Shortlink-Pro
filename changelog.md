@@ -43,6 +43,23 @@ Migrasi
 
 ---
 
+[2026-10-28] Perbaiki tampilan hancur saat diakses lewat SSH tunnel (port hilang di URL aset)
+
+⚠️ Perlu Perhatian
+- Bila nginx di server sudah terpasang sebelum perubahan ini, salin ulang templat lalu jalankan `sudo ./install.sh --domain <domain>` (atau terapkan dua `map` + `X-Forwarded-Port` secara manual). Tanpa itu, halaman akan tampil tanpa CSS/JS saat dibuka lewat tunnel pada port selain 80.
+
+Diperbaiki
+- Halaman terbuka tetapi tampilannya hancur: semua aset diminta ke `http://127.0.0.1/build/assets/...` (tanpa port) sehingga CSS/JS gagal dimuat ketika diakses lewat SSH tunnel `-L 9000:127.0.0.1:80`.
+- **Akar masalah:** Symfony membuang nomor port dari header `Host` (`Request::getHost()` memakai `preg_replace('/:\d+$/', '', ...)`), sehingga port untuk menyusun URL hanya diambil dari `X-Forwarded-Port`. Nilai itu sebelumnya selalu diturunkan dari skema (`443`/`80`), bukan dari port yang benar-benar dipakai pengunjung. Akibatnya URL aset kehilangan `:9000` dan menunjuk port 80 di komputer pengunjung.
+- **Perbaikan:** `X-Forwarded-Port` kini diambil dari header `Host` bila ada portnya, dan baru jatuh ke nilai bawaan skema bila tidak ada:
+  `map $http_host $port_from_host_shortlink { ~^.+:(\d+)$ $1; default ''; }` → `map $port_from_host_shortlink $forwarded_port_shortlink { '' $default_port_shortlink; default $port_from_host_shortlink; }` dengan `$default_port_shortlink` = `443` (https) / `80` (http).
+- Header `Host` dan `X-Forwarded-Host` kini memakai `$http_host` (lewat `map $http_host $host_with_port_shortlink`), bukan `$host` yang membuang port, supaya nilai yang dicatat log dan diteruskan ke aplikasi sama dengan yang dikirim pengunjung.
+
+**Berkas:** `nginx/shortlink-pro.conf`, `changelog.md`, `Cara_Pakai_Docker.md`
+**Verifikasi:** lewat tunnel `-L 9000:127.0.0.1:80`, halaman login merujuk `http://127.0.0.1:9000/build/assets/*.css` dan aset terunduh `200 text/css` (1.237 byte) serta `app-DMsN-rLE.js` `200` (51.516 byte); lewat tunnel `-L 8080:...` URL ikut menjadi `:8080`; akses HTTP langsung port 80 tetap `http://127.0.0.1/build/...` (tanpa `:80`); simulasi Cloudflare (`Host: short.example.com` + `X-Forwarded-Proto: https`) menghasilkan `https://short.example.com/build/...` tanpa `:443`; `nginx -t` OK dan `systemctl restart nginx` sukses.
+
+---
+
 [2026-10-28] Kunci server ke loopback: IP server bukan lagi pintu masuk aplikasi
 
 ⚠️ Perlu Perhatian
