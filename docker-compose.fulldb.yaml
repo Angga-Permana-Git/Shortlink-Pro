@@ -163,6 +163,36 @@ services:
                 max-size: "10m"
                 max-file: "3"
 
+    # ------------------------------------------------------------- phpmyadmin
+    # Alat bantu, bukan bagian runtime: aktifkan dengan `--profile tools`.
+    # Hanya loopback dan hanya network `backend`, jadi tidak pernah terlihat
+    # dari nginx/Cloudflare. Akses dari laptop lewat SSH tunnel:
+    #   ssh -N -L 8081:127.0.0.1:8081 shortlink   ->  http://localhost:8081
+    # Masuk dengan user DB (DB_USERNAME/DB_PASSWORD) atau root + isi
+    # secrets/db_root_password.txt.
+    phpmyadmin:
+        image: phpmyadmin:5-apache
+        profiles: ["tools"]
+        restart: unless-stopped
+        environment:
+            PMA_HOST: db
+            PMA_PORT: "3306"
+            UPLOAD_LIMIT: 64M
+        ports:
+            - "127.0.0.1:${PMA_PORT:-8081}:80"
+        depends_on:
+            db:
+                condition: service_healthy
+        networks:
+            - backend
+        security_opt:
+            - no-new-privileges:true
+        logging:
+            driver: json-file
+            options:
+                max-size: "10m"
+                max-file: "3"
+
 networks:
     # app/scheduler butuh internet (composer tidak, tapi API Safe Browsing/QR).
     egress:
