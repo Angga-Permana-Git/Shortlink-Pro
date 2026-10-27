@@ -152,7 +152,7 @@ cat <<TEKS
 
 Langkah berikutnya:
 1. Pastikan container berjalan:
-     docker compose -f shortlink-pro-dockerapp-nginxhost/docker-compose.fulldb.yaml ps
+     cd ${SCRIPT_DIR} && docker compose -f docker-compose.fulldb.yaml ps
 2. Arahkan Cloudflare Tunnel ke origin ini, misalnya:
      cloudflared tunnel --url http://127.0.0.1:80
    atau pada config.yml tunnel bernama:

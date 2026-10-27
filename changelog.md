@@ -43,6 +43,31 @@ Migrasi
 
 ---
 
+[2026-10-27] Paket deploy Docker disatukan di root repo
+
+Perlu Perhatian
+- Folder `shortlink-pro-dockerapp-nginxhost/` dihapus. `Dockerfile`, `docker/`, `docker-compose.fulldb.yaml`, `nginx/`, `install.sh`, dan `secrets/` sekarang berada di root repo; semua perintah `docker compose` dijalankan dari root.
+- `docker-compose.yaml`, `docker-compose.db.yaml`, dan `docker-compose.app.yaml` dihapus. Satu-satunya compose adalah `docker-compose.fulldb.yaml` (app + MySQL + scheduler; nginx tetap di host sebagai reverse proxy).
+- `.env.example.fulldb` dan `.env.example.app` digabung menjadi satu `.env.example` di root yang berisi nilai produksi; `.env` di root berisi nilai pengembangan XAMPP.
+- Siapa pun yang sudah deploy dengan layout lama harus memindahkan `.env` dan `secrets/db_root_password.txt` ke root repo, lalu `docker compose -f docker-compose.fulldb.yaml up -d --build`.
+
+Diubah
+- `Dockerfile`: `COPY` diarahkan ke layout root (`docker/apache.conf`, `docker/php.ini`, `docker/entrypoint.sh`).
+- `docker-compose.fulldb.yaml`: `build` dipindah ke anchor `x-app-common` sehingga `scheduler` ikut memakai image lokal; `build.context` menjadi `.`.
+- `.dockerignore` dan `.gitignore` disesuaikan (pengecualian `secrets/`, konteks build root).
+- `README.md`, `Cara_Pakai_Docker.md`, `install.sh`, `.aicontext/activetodo.md`, dan `.aicontext/coredependencies.md` mengikuti layout baru.
+- `.env` dibersihkan: key mati `AUTH_MODE`, `KEYCLOAK_LOGOUT_REDIRECT_URI`, `PHP_CLI_SERVER_WORKERS`, serta blok AWS/REDIS/MEMCACHED dihapus.
+- **Alasan:** aplikasi berjalan sebagai container di belakang nginx milik host, sehingga berkas deploy tidak perlu dipisah ke subfolder. Pemisahan itu membuat konteks build harus `..` dan menyisakan tiga compose yang saling bertentangan.
+
+Diperbaiki
+- `docker compose up -d --build` gagal pada service `scheduler` dengan `pull access denied for shortlink-pro-app, repository does not exist or may require 'docker login'`.
+- **Akar masalah:** service `scheduler` hanya punya `image:` tanpa `build:`, sehingga compose mencoba menarik image dari registry sebelum image lokal selesai dibangun. Dengan `build` di anchor bersama, kedua service membangun/memakai image yang sama.
+
+**Berkas:** `Dockerfile`, `.dockerignore`, `docker-compose.fulldb.yaml`, `docker/{apache.conf,php.ini,entrypoint.sh}`, `nginx/shortlink-pro.conf`, `install.sh`, `secrets/.gitignore`, `.env`, `.env.example`, `.gitignore`, `README.md`, `Cara_Pakai_Docker.md`, `.aicontext/activetodo.md`, `.aicontext/coredependencies.md`
+**Verifikasi:** `python -c "yaml.safe_load(...)"` membaca `docker-compose.fulldb.yaml` tanpa galat dan menghasilkan service `app`, `scheduler`, `db` dengan blok `build` pada `app` dan `scheduler`; `bash -n install.sh` dan `bash -n docker/entrypoint.sh` lolos; semua berkas shell/YAML memakai LF (0 CR); `grep` memastikan tidak ada referensi `shortlink-pro-dockerapp-nginxhost` yang tersisa di kode/dokumen aktif.
+
+---
+
 [2026-10-27] Penyesuaian dokumentasi: `aturan_pengembangan.md` keluar, `README.md` masuk
 
 Perlu Perhatian

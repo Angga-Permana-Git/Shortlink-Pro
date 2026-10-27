@@ -1,35 +1,29 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1.7
 # =============================================================================
-# Dockerfile - Shortlink (Laravel 12 + Filament v5)
+# Shortlink Pro - image produksi (Apache mod_php + MySQL)
+# =============================================================================
+# Konteks build adalah root repo (lihat docker-compose.fulldb.yaml):
+#   docker compose -f docker-compose.fulldb.yaml build
 #
-# Urutan stage dibuat berlapis supaya build tidak gagal dan cache tidak sia-sia:
-#   base    -> PHP + ekstensi + Apache (satu-satunya tempat versi PHP)
-#   vendor  -> composer install: manifest dulu, sumber belakangan
-#   assets  -> npm ci: lockfile dulu, sumber belakangan, lalu vite build
-#   runtime -> hanya menyalin hasil, tanpa tool build
+# Urutan stage dan alasannya:
+#   base    : PHP + ekstensi + Apache (dipakai bersama stage lain)
+#   vendor  : composer install HANYA dari composer.json/lock lebih dulu, supaya
+#             layer ini tetap ter-cache saat kode berubah
+#   assets  : npm ci + vite build; vendor ikut disalin karena app.css memakai
+#             @source ke view pagination Laravel di dalam vendor
+#   runtime : hasil akhir; tidak membawa node_modules, composer, atau tool build
 #
-# Build:
-#   docker compose build
-#   docker build -t shortlink-app:latest .
-#
-# Versi PHP dikunci ke rilis yang sudah memuat patch PHP2Shell
-# (CVE-2026-109618 & CVE-2026-109619). Bila tag tersebut tidak tersedia di
-# registry, naikkan ke rilis patch berikutnya, jangan turunkan:
-#   docker build --build-arg PHP_VERSION=8.3.36 -t shortlink-app:latest .
+# Jangan menurunkan PHP_VERSION di bawah 8.3.36 tanpa alasan kuat: versi itu
+# adalah rilis pertama yang memuat patch PHP2Shell (CVE-2026-109618/109619).
 # =============================================================================
 
 ARG PHP_VERSION=8.3.36
 
-# ---------------------------------------------------------------------------
-# base: PHP + ekstensi + Apache
-# ---------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# base - PHP, ekstensi, dan Apache
+# -----------------------------------------------------------------------------
 FROM php:${PHP_VERSION}-apache AS base
 
-ENV COMPOSER_ALLOW_SUPERUSER=1 \
-    COMPOSER_NO_INTERACTION=1
-
-# Ekstensi disusun dalam satu layer agar perubahan konfigurasi Apache tidak
-# memicu kompilasi ulang ekstensi.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         git \
@@ -52,106 +46,114 @@ RUN apt-get update \
         pcntl \
         pdo_mysql \
         zip \
-    && a2enmod rewrite headers \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* /tmp/pear
+    && a2enmod rewrite \
+    && rm -rf /var/lib/apt/lists/*
 
-# ---------------------------------------------------------------------------
-# vendor: dependensi PHP
-# ---------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# vendor - dependensi PHP produksi
+# -----------------------------------------------------------------------------
 FROM base AS vendor
 
-COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+ENV COMPOSER_ALLOW_SUPERUSER=1 \
+    COMPOSER_NO_INTERACTION=1
+
+COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /app
 
-# Manifest disalin lebih dulu: selama composer.json/composer.lock tidak
-# berubah, layer install tetap ter-cache walau kode aplikasi berubah.
+# Manifest dulu supaya cache composer tidak batal hanya karena kode berubah.
 COPY composer.json composer.lock ./
-
 RUN --mount=type=cache,target=/root/.composer/cache \
     composer install \
         --no-dev \
         --no-interaction \
         --no-progress \
-        --no-ansi \
-        --no-scripts \
         --prefer-dist \
-        --optimize-autoloader
+        --optimize-autoloader \
+        --no-scripts
 
-# Sumber disalin setelah dependensi terpasang, lalu autoload dioptimalkan
-# ulang agar kelas App\* ikut masuk classmap.
 COPY . .
 
+# Script composer sengaja tidak dijalankan di build: package:discover butuh
+# filesystem tulis dan dijalankan saat container start.
 RUN composer dump-autoload --no-dev --optimize --no-scripts
 
-# ---------------------------------------------------------------------------
-# assets: aset Vite
-# ---------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# assets - CSS/JS produksi
+# -----------------------------------------------------------------------------
 FROM node:22-bookworm-slim AS assets
 
-# Jangan unduh peramban untuk paket uji (e2e/playwright) saat npm ci.
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
     PUPPETEER_SKIP_DOWNLOAD=1
 
 WORKDIR /app
 
-# package-lock.json sudah ada di repo, jadi npm ci dipakai agar versi
-# dependensi sama persis dengan mesin pengembang.
 COPY package.json package-lock.json ./
-
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --no-audit --no-fund
 
 COPY vite.config.js ./
 COPY resources ./resources
-COPY app ./app
 COPY public ./public
 
-# resources/css/app.css memakai @source ke view pagination Laravel di vendor.
-# Tanpa vendor di stage ini, kelas pagination hilang dari CSS hasil build.
+# Tailwind memindai view pagination milik Laravel di dalam vendor.
 COPY --from=vendor /app/vendor ./vendor
 
 RUN npm run build
 
-# ---------------------------------------------------------------------------
-# runtime: aplikasi siap jalan
-# ---------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# runtime - citra akhir yang dijalankan
+# -----------------------------------------------------------------------------
 FROM base AS runtime
 
 WORKDIR /var/www/html
 
-# Konfigurasi lebih dulu supaya layer ini tidak ikut berubah setiap kode diedit.
+# Konfigurasi Apache dan PHP khusus produksi.
 COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf
-COPY docker/php.ini /usr/local/etc/php/conf.d/99-app.ini
+COPY docker/php.ini /usr/local/etc/php/conf.d/zz-shortlink-pro.ini
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 
-# Normalisasi akhir baris (CRLF) dan izin eksekusi. Tanpa ini, container
-# gagal start dengan "/bin/sh^M: bad interpreter" bila berkas tersimpan CRLF.
-RUN chmod 755 /usr/local/bin/entrypoint.sh \
+# Port internal 9000 (tidak butuh hak istimewa), lalu matikan jejak versi.
+# Root filesystem read-only: log global Apache harus diarahkan ke stderr dan
+# conf CustomLog global dimatikan, kalau tidak Apache gagal membuka berkas log.
+RUN sed -ri 's/^Listen 80$/Listen 9000/' /etc/apache2/ports.conf \
+    && sed -ri 's#^ErrorLog .*#ErrorLog /proc/self/fd/2#' /etc/apache2/apache2.conf \
+    && (a2disconf other-vhosts-access-log 2>/dev/null \
+        || rm -f /etc/apache2/conf-enabled/other-vhosts-access-log.conf) \
+    && printf '%s\n' \
+        'ServerTokens Prod' \
+        'ServerSignature Off' \
+        'TraceEnable Off' \
+        > /etc/apache2/conf-available/zz-shortlink-hardening.conf \
+    && a2enconf zz-shortlink-hardening \
+    && chmod 755 /usr/local/bin/entrypoint.sh \
     && sed -i 's/\r$//' /usr/local/bin/entrypoint.sh
 
-# Vendor disalin sebelum sumber; .dockerignore mengecualikan vendor sehingga
-# COPY . . tidak menimpanya.
+# Vendor dari stage vendor, sumber aplikasi, lalu aset hasil build.
+# .dockerignore memastikan vendor/, node_modules/, .env, dan public/build asli
+# tidak ikut masuk dari konteks.
 COPY --from=vendor /app/vendor ./vendor
 COPY . .
 COPY --from=assets /app/public/build ./public/build
 
+# Direktori runtime. public/storage adalah symlink relatif supaya tetap benar
+# saat root filesystem dipasang read-only.
 RUN mkdir -p \
+        storage/app/public \
         storage/framework/cache/data \
         storage/framework/sessions \
         storage/framework/views \
         storage/logs \
-        storage/app/public \
         bootstrap/cache \
+    && rm -rf public/storage \
+    && ln -s ../storage/app/public public/storage \
     && chown -R www-data:www-data storage bootstrap/cache \
     && chmod -R ug+rwX storage bootstrap/cache
 
-# Laravel menyediakan route kesehatan /up (lihat bootstrap/app.php).
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
-    CMD php -r "exit(@file_get_contents('http://127.0.0.1/up') === false ? 1 : 0);"
+    CMD php -r "exit(@file_get_contents('http://127.0.0.1:9000/up') === false ? 1 : 0);"
 
-EXPOSE 80
+EXPOSE 9000
 
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["apache2-foreground"]

@@ -82,14 +82,14 @@ docker-compose.override.yaml
 # ==========================================================================
 # Kredensial: jangan pernah masuk repository
 # ==========================================================================
-# Menangkap .env di subfolder (mis. shortlink-pro-dockerapp-nginxhost/.env).
+# Menangkap .env di subfolder mana pun (root sudah ditangani pola .env di atas).
 **/.env
 **/.env.*
 !**/.env.example
 !**/.env.example.*
 
 # Kata sandi root MySQL untuk deploy produksi (Docker secret).
-/shortlink-pro-dockerapp-nginxhost/secrets/
+/secrets/
 **/secrets/
 
 # Sertifikat/kunci privat bila kelak dipakai.
@@ -104,8 +104,8 @@ docker-compose.override.yaml
 *.orig
 
 # Cadangan basis data dan arsip unggahan hasil perintah backup di
-# shortlink-pro-dockerapp-nginxhost/README.md (mysqldump + tar). Berisi data
-# produksi, jadi tidak boleh masuk repository.
+# Cara_Pakai_Docker.md (mysqldump + tar). Berisi data produksi, jadi tidak
+# boleh masuk repository.
 /backup-*.sql
 /backup-*.sql.gz
 /storage-*.tar.gz

@@ -182,32 +182,12 @@ Pengaturan yang dapat diubah tanpa deploy ada di panel admin: **Branding**, **Ke
 
 ## Deployment
 
-### Docker all-in-one (app + MySQL)
+### Docker (app + MySQL) dengan reverse proxy nginx di host
+
+Satu berkas compose untuk semua mode: `docker-compose.fulldb.yaml` (app + MySQL + scheduler). Aplikasi hanya mendengarkan di `127.0.0.1:9000`; nginx di host yang menjadi reverse proxy, dan Cloudflare Tunnel menjadi satu-satunya pintu masuk publik.
 
 ```bash
 cp .env.example .env       # isi APP_KEY, DB_PASSWORD, APP_URL
-docker compose up -d --build
-```
-
-Aplikasi tersedia di `http://localhost:8080`. Rincian varian compose ada di [Cara_Pakai_Docker.md](Cara_Pakai_Docker.md).
-
-### Produksi: nginx host + Cloudflare Tunnel
-
-Folder [shortlink-pro-dockerapp-nginxhost](shortlink-pro-dockerapp-nginxhost/) berisi paket produksi:
-
-- `docker-compose.fulldb.yaml` — app + MySQL + scheduler.
-- `docker-compose.app.yaml` — app + scheduler dengan MySQL eksternal.
-- `Dockerfile` — build 4 tahap (base → vendor → assets → runtime), PHP 8.3.36.
-- `nginx/shortlink-pro.conf` — reverse proxy HTTP di `127.0.0.1:80`.
-- `install.sh` — memasang konfigurasi nginx.
-- `README.md` — langkah lengkap, hardening, dan operasi.
-
-Alurnya: **Cloudflare (HTTPS) → cloudflared → nginx `127.0.0.1:80` → container app `127.0.0.1:9000`**. Tidak ada TLS di server; Cloudflare menangani sertifikat publik.
-
-```bash
-cd shortlink-pro-dockerapp-nginxhost
-cp .env.example.fulldb .env
-# isi APP_KEY, DB_PASSWORD, APP_URL (domain tunnel), kunci Safe Browsing
 
 mkdir -p secrets
 openssl rand -base64 24 > secrets/db_root_password.txt
@@ -216,6 +196,8 @@ chmod 600 secrets/db_root_password.txt
 docker compose -f docker-compose.fulldb.yaml up -d --build
 sudo ./install.sh --domain short.example.com
 ```
+
+Alurnya: **Cloudflare (HTTPS) → cloudflared → nginx `127.0.0.1:80` → container app `127.0.0.1:9000` → container db (network internal)**. Tidak ada TLS di server; Cloudflare menangani sertifikat publik. Langkah lengkap, hardening, dan operasi ada di [Cara_Pakai_Docker.md](Cara_Pakai_Docker.md).
 
 ### Tanpa Docker
 
@@ -246,14 +228,16 @@ app/
 bootstrap/                   # app.php, providers, cache
 config/                      # Termasuk pemendek.php (QR, kata sandi, Safe Browsing)
 database/migrations/         # Skema pengguna, tautan, klik, Linktree, audit, 2FA
-docker/                      # Konfigurasi image Docker
+docker/                      # Dockerfile, apache.conf, php.ini, entrypoint.sh
+install.sh                   # Pemasang reverse proxy nginx di host
 lang/{id,en}/                # ui.php, validation, auth, passwords, en.json
+nginx/                       # Konfigurasi reverse proxy host
 resources/
 ├── css/publik/              # dasar, beranda, auth, panel, tautan, linktree
 ├── js/publik/               # beranda.js, panel.js, auth.js
 └── views/                   # Blade publik, auth, panel Filament
 routes/                      # web.php, api.php, console.php
-shortlink-pro-dockerapp-nginxhost/  # Paket deploy produksi
+secrets/                     # Rahasia runtime (kata sandi root MySQL), tidak di-commit
 storage/                     # Log, cache, unggahan (runtime, tidak di-commit)
 tests/                       # Feature, unit, dan skenario E2E (tests/e2e)
 ```
@@ -281,7 +265,7 @@ Keadaan per 2026-10-23, setelah 218 test dan `pint` lolos:
 - Panel admin: pengguna, tautan, moderasi Linktree, empat halaman log dengan ekspor CSV, impor CSV, 2FA, allowlist IP, impersonasi, dan pengaturan branding/operasional.
 - Dua bahasa penuh di sisi pengguna dan publik; label kustom panel admin juga sudah diterjemahkan (`lang/en.json`, 332 kunci), meski sebagian teks bawaan Filament masih mengikuti paket.
 - Registrasi dengan contoh isian dan tombol lihat/sembunyikan kata sandi.
-- Paket deploy produksi `shortlink-pro-dockerapp-nginxhost/` (nginx host + Cloudflare Tunnel) dan `Dockerfile` empat tahap.
+- Paket deploy produksi di root repo (`docker-compose.fulldb.yaml` + `nginx/` host + Cloudflare Tunnel) dan `Dockerfile` empat tahap.
 - PHP sudah di-patch untuk PHP2Shell; prosedur ada di [SECURITY.md](SECURITY.md).
 
 **Tindak lanjut yang masih terbuka**
@@ -299,8 +283,7 @@ Daftar tugas berjalan lengkap ada di `.aicontext/activetodo.md` (tidak ikut ter-
 | Berkas | Isi |
 |--------|-----|
 | [SECURITY.md](SECURITY.md) | Prosedur patch PHP, CVE PHP2Shell, rollback, checklist produksi. |
-| [Cara_Pakai_Docker.md](Cara_Pakai_Docker.md) | Build image, varian compose, variabel lingkungan. |
-| [shortlink-pro-dockerapp-nginxhost/README.md](shortlink-pro-dockerapp-nginxhost/README.md) | Deploy produksi: nginx host, Cloudflare Tunnel, hardening, backup. |
+| [Cara_Pakai_Docker.md](Cara_Pakai_Docker.md) | Deploy Docker: build image, nginx host, Cloudflare Tunnel, hardening, backup. |
 | [KEYCLOAK_SETUP.md](KEYCLOAK_SETUP.md) | Konfigurasi SSO OIDC. |
 | [GOOGLE_SETUP.md](GOOGLE_SETUP.md) | Login Google dan Safe Browsing API. |
 | [PRDapp.md](PRDapp.md) | Keputusan produk dan aturan bisnis. |

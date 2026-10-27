@@ -1,0 +1,181 @@
+# =============================================================================
+# Shortlink Pro - deploy produksi (app + MySQL di Docker, nginx di host)
+# =============================================================================
+# Arsitektur:
+#
+#   Cloudflare (TLS) -> cloudflared -> nginx host 127.0.0.1:80
+#                                          |
+#                                          v
+#                            app container 127.0.0.1:9000
+#                                          |
+#                                          v
+#                            db container (network internal)
+#
+# Port aplikasi HANYA dipublikasikan ke loopback (127.0.0.1). Nginx di host
+# yang menjadi reverse proxy; tidak ada service nginx di dalam compose ini.
+#
+# Pakai dari root repo:
+#   cp .env.example .env        # lalu isi APP_KEY, DB_PASSWORD, APP_URL
+#   mkdir -p secrets
+#   openssl rand -base64 24 > secrets/db_root_password.txt && chmod 600 secrets/db_root_password.txt
+#   docker compose -f docker-compose.fulldb.yaml up -d --build
+#   docker compose -f docker-compose.fulldb.yaml ps
+#   curl -fsS http://127.0.0.1:9000/up && echo " OK"
+#
+# Panduan lengkap: Cara_Pakai_Docker.md
+# =============================================================================
+
+name: shortlink-pro
+
+# -----------------------------------------------------------------------------
+# Dasar bersama untuk container aplikasi (app + scheduler).
+# `build` sengaja diletakkan di sini agar SEMUA service yang memakai image ini
+# ikut membangun/memakai image lokal. Tanpa itu, service yang hanya punya
+# `image:` akan mencoba `docker pull` dan gagal dengan
+# "pull access denied for shortlink-pro-app, repository does not exist".
+# -----------------------------------------------------------------------------
+x-app-common: &app-common
+    image: shortlink-pro-app:${APP_IMAGE_TAG:-latest}
+    build:
+        context: .
+        dockerfile: Dockerfile
+        args:
+            PHP_VERSION: ${PHP_VERSION:-8.3.36}
+    restart: unless-stopped
+    init: true
+    env_file:
+        - .env
+    # Image immutable: seluruh berkas yang perlu ditulis dipindah ke tmpfs/volume.
+    read_only: true
+    security_opt:
+        - no-new-privileges:true
+    cap_drop:
+        - ALL
+    cap_add:
+        # Apache master (root) menurunkan hak ke www-data dan mengelola worker.
+        - CHOWN
+        - SETUID
+        - SETGID
+        - KILL
+    tmpfs:
+        - /tmp:size=64m,mode=1777
+        - /run:size=16m,mode=755
+        - /run/lock:size=8m,mode=1777
+        - /var/www/html/bootstrap/cache:size=32m,mode=775
+    volumes:
+        - app-storage:/var/www/html/storage
+    logging:
+        driver: json-file
+        options:
+            max-size: "10m"
+            max-file: "3"
+    healthcheck:
+        test:
+            [
+                "CMD",
+                "php",
+                "-r",
+                "exit(@file_get_contents('http://127.0.0.1:9000/up') === false ? 1 : 0);",
+            ]
+        interval: 30s
+        timeout: 5s
+        retries: 3
+        start_period: 120s
+
+services:
+    # ------------------------------------------------------------------- app
+    # Satu-satunya service yang menjalankan migrasi (RUN_MIGRATIONS default true).
+    app:
+        <<: *app-common
+        depends_on:
+            db:
+                condition: service_healthy
+        ports:
+            # Loopback saja: trafik publik harus lewat nginx host.
+            - "127.0.0.1:${APP_PORT:-9000}:9000"
+        networks:
+            - egress
+            - backend
+        stop_grace_period: 30s
+
+    # ------------------------------------------------------------- scheduler
+    # Penjadwal Laravel (logs:purge, admin:notify-attention, denyut jadwal).
+    # Migrasi hanya dijalankan service app, jadi di sini dimatikan.
+    scheduler:
+        <<: *app-common
+        command: ["php", "artisan", "schedule:work"]
+        environment:
+            RUN_MIGRATIONS: "false"
+        depends_on:
+            app:
+                condition: service_healthy
+        healthcheck:
+            disable: true
+        networks:
+            - egress
+            - backend
+        stop_grace_period: 30s
+
+    # -------------------------------------------------------------------- db
+    # Tidak membuka port ke host dan berada di network internal (tanpa internet).
+    db:
+        image: mysql:8.0
+        restart: unless-stopped
+        command:
+            - --character-set-server=utf8mb4
+            - --collation-server=utf8mb4_unicode_ci
+        environment:
+            MYSQL_DATABASE: ${DB_DATABASE}
+            MYSQL_USER: ${DB_USERNAME}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+            # Kata sandi root tidak pernah masuk environment aplikasi; dibaca
+            # dari Docker secret (berkas ./secrets/db_root_password.txt).
+            MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+        secrets:
+            - db_root_password
+        volumes:
+            - db-data:/var/lib/mysql
+        networks:
+            - backend
+        security_opt:
+            - no-new-privileges:true
+        cap_drop:
+            - ALL
+        cap_add:
+            - CHOWN
+            - DAC_OVERRIDE
+            - FOWNER
+            - SETUID
+            - SETGID
+        healthcheck:
+            test:
+                [
+                    "CMD-SHELL",
+                    'mysqladmin ping -h 127.0.0.1 -u"$$MYSQL_USER" -p"$$MYSQL_PASSWORD" --silent',
+                ]
+            interval: 10s
+            timeout: 5s
+            retries: 12
+            start_period: 40s
+        logging:
+            driver: json-file
+            options:
+                max-size: "10m"
+                max-file: "3"
+
+networks:
+    # app/scheduler butuh internet (composer tidak, tapi API Safe Browsing/QR).
+    egress:
+        driver: bridge
+    # internal: true -> db tidak punya akses internet sama sekali.
+    backend:
+        driver: bridge
+        internal: true
+
+volumes:
+    db-data:
+    app-storage:
+
+secrets:
+    db_root_password:
+        file: ./secrets/db_root_password.txt
