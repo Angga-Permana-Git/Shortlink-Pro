@@ -43,6 +43,29 @@ Migrasi
 
 ---
 
+[2026-10-28] Kencangkan origin publik: APP_URL, secure cookie, `server_name` eksplisit, dan penolak Host tak dikenal
+
+⚠️ Perlu Perhatian
+- Setelah `SESSION_SECURE_COOKIE=true`, cookie sesi hanya dikirim lewat HTTPS. Akses lewat SSH tunnel tetap bisa login karena browser memperlakukan `localhost`/`127.0.0.1` sebagai secure context, tetapi akses lewat `http://<ip-server>` akan gagal login. Itu memang tujuannya.
+- Blok penolak `default_server ... return 444` membuat permintaan dengan Host yang tidak terdaftar ditutup tanpa respons. Saat menambah aplikasi kedua, daftarkan domainnya di `server_name` bloknya sendiri; blok penolak tidak perlu diubah.
+- `localhost` dan `127.0.0.1` sengaja tetap ada di `server_name`. Tanpa keduanya, akses lewat SSH tunnel (`-L 9000:127.0.0.1:80`) akan ditolak blok penolak.
+
+Diubah
+- `.env` (server, tidak di-commit): `APP_URL=http://127.0.0.1` → `https://s.nalar.or.id` dan `SESSION_SECURE_COOKIE=false` → `true`. Nilai lama salah karena `APP_URL` dipakai di luar konteks request: `route()` dari CLI menghasilkan `http://127.0.0.1/<slug>`, sehingga tautan/QR yang dibuat queue atau scheduler tidak bisa dibuka dari internet.
+- `nginx/shortlink-pro.conf`: `server_name __DOMAIN__` → `server_name __DOMAIN__ localhost 127.0.0.1`, plus blok penolak di akhir berkas:
+  `server { listen 127.0.0.1:80 default_server; server_name _; server_tokens off; access_log off; return 444; }`
+  Alasan: `_` adalah catch-all, jadi Host apa pun dilayani aplikasi ini tanpa galat — berbahaya begitu ada aplikasi kedua di server yang sama.
+- `install.sh`: cabang `--listen-all` kini memindahkan **kedua** baris `listen` ke `80`, dengan pola `default_server` diproses lebih dulu agar tidak menyisakan sisa teks.
+- `Cara_Pakai_Docker.md` §6/§7/§11/§12: penjelasan `server_name` eksplisit + blok penolak, ingress tunnel memakai `127.0.0.1` (bukan `localhost`) dan wajib `restart` cloudflared, kredensial `chmod 600`, baris `APP_URL`/`SESSION_SECURE_COOKIE`/`SESSION_DOMAIN` di tabel variabel, 5 baris troubleshooting baru, dan 3 butir checklist go-live.
+
+Dihapus
+- Sisa tunnel mati di server: `/etc/cloudflared/763dfabc-3b1b-449c-9c53-da68af56cde7.json` dan direktori `/root/.cloudflared/` (tunnel `763dfabc...` sudah tidak ada di akun Cloudflare: `cloudflared tunnel info` → `found 0 tunnels`). Kredensial lama itu bermode `644` sehingga terbaca semua user lokal.
+
+**Berkas:** `nginx/shortlink-pro.conf`, `install.sh`, `Cara_Pakai_Docker.md`, `changelog.md`, `.env` (server)
+**Verifikasi:** `bash -n install.sh` lolos; `sed` menghasilkan `server_name s.nalar.or.id localhost 127.0.0.1` dan `listen 127.0.0.1:80 default_server`; `nginx -t` sukses; `curl -H 'Host: s.nalar.or.id' http://127.0.0.1/up` = 200; `curl -H 'Host: bukan-domain-kita.test' http://127.0.0.1/up` ditolak; `https://s.nalar.or.id/up` = 200; cookie sesi memuat `secure`; `route('redirect.show', ...)` dari CLI memakai `https://s.nalar.or.id`.
+
+---
+
 [2026-10-28] Samakan zona waktu server, container, dan aplikasi ke Asia/Jakarta (WIB)
 
 ⚠️ Perlu Perhatian

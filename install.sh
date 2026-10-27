@@ -108,7 +108,10 @@ sed \
     "$SOURCE_CONF" > "$TMP_CONF"
 
 if [ "$LISTEN_ALL" = "true" ]; then
-    sed -i 's/listen 127.0.0.1:80;/listen 80;/' "$TMP_CONF"
+    # Baris `default_server` diproses lebih dulu; pola kedua hanya cocok pada
+    # `listen` tanpa akhiran sehingga tidak menyisakan sisa teks.
+    sed -i 's/listen 127\.0\.0\.1:80 default_server;/listen 80 default_server;/' "$TMP_CONF"
+    sed -i 's/listen 127\.0\.0\.1:80;/listen 80;/' "$TMP_CONF"
     echo "PERINGATAN: origin HTTP terbuka di semua antarmuka. Pastikan firewall" >&2
     echo "hanya mengizinkan Cloudflare/cloudflared, atau batalkan --listen-all." >&2
 fi
