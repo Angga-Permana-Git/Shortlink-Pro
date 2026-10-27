@@ -16,6 +16,7 @@ export default defineConfig({
                 'resources/css/publik/panel.css',
                 'resources/js/publik/beranda.js',
                 'resources/js/publik/panel.js',
+                'resources/js/publik/auth.js',
             ],
             refresh: true,
         }),

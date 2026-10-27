@@ -4,18 +4,18 @@
 
         <div>
             <x-filament::button type="submit">
-                Simpan Halaman Linktree
+                {{ __('ui.panel.simpan_halaman_linktree') }}
             </x-filament::button>
         </div>
     </form>
 
     <x-filament::section>
         <x-slot name="heading">
-            Alamat halaman publik
+            {{ __('ui.panel.alamat_halaman_publik') }}
         </x-slot>
 
         <x-slot name="description">
-            Bagikan alamat ini agar orang lain dapat melihat seluruh tautan Anda.
+            {{ __('ui.panel.bagikan_alamat') }}
         </x-slot>
 
         @if ($this->publicUrl())
@@ -23,10 +23,7 @@
                 {{ $this->publicUrl() }}
             </a>
         @else
-            <p>
-                Alamat publik belum diisi, sehingga halaman belum bisa dibagikan.
-                Isi kolom Alamat publik pada formulir di atas, lalu simpan.
-            </p>
+            <p>{{ __('ui.panel.alamat_belum_form') }}</p>
         @endif
     </x-filament::section>
 </x-filament-panels::page>

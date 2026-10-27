@@ -44,18 +44,23 @@ class UserAktivitasService
 
         $puncak = array_search(max($jam), $jam, true);
 
-        return ['jam' => $jam, 'puncak' => max($jam) > 0 ? sprintf('%02d.00 %s', $puncak, $this->waktu->label($zona)) : 'Belum ada klik'];
+        return ['jam' => $jam, 'puncak' => max($jam) > 0 ? sprintf('%02d.00 %s', $puncak, $this->waktu->label($zona)) : __('ui.panel.belum_ada_klik')];
     }
 
     /**
-     * @return array{total: int, berhasil: int, gagal: int, persen: float, rincian: array<int, array{label: string, jumlah: int}>}
+     * @return array{total: int, berhasil: int, gagal: int, persen: float, rincian: array<int, array{label: string, jumlah: int, status: string}>}
      */
     public function kualitas(User $pengguna, int $hari = 30): array
     {
         $jumlah = $this->klik($pengguna, $hari)->selectRaw('status, COUNT(*) as jumlah')->groupBy('status')->pluck('jumlah', 'status');
         $total = (int) $jumlah->sum();
         $berhasil = (int) ($jumlah['success'] ?? 0);
-        $label = ['wrong_password' => 'Kata sandi salah', 'expired' => 'Kedaluwarsa', 'inactive' => 'Nonaktif', 'scheduled' => 'Belum mulai'];
+        $label = [
+            'wrong_password' => __('ui.panel.sandi_salah'),
+            'expired' => __('ui.panel.kedaluwarsa'),
+            'inactive' => __('ui.panel.nonaktif'),
+            'scheduled' => __('ui.panel.belum_mulai'),
+        ];
 
         return [
             'total' => $total,
@@ -65,6 +70,7 @@ class UserAktivitasService
             'rincian' => $jumlah->map(fn (int $n, string $status): array => [
                 'label' => $label[$status] ?? $status,
                 'jumlah' => $n,
+                'status' => $status,
             ])->values()->all(),
         ];
     }
@@ -82,7 +88,7 @@ class UserAktivitasService
             ->get()
             ->map(fn (ClickEvent $klik): array => [
                 'slug' => $klik->shortUrl?->slug ?? '-',
-                'status' => $klik->status === 'success' ? 'Berhasil' : 'Gagal',
+                'status' => $klik->status === 'success' ? __('ui.panel.berhasil') : __('ui.panel.gagal'),
                 'waktu' => $this->waktu->format($klik->created_at, $pengguna),
             ])->all();
     }
@@ -97,11 +103,11 @@ class UserAktivitasService
     private function labelSumber(?string $url): string
     {
         if (! $url) {
-            return 'Langsung';
+            return __('ui.panel.langsung');
         }
 
         $host = parse_url($url, PHP_URL_HOST);
 
-        return $host ? preg_replace('/^www\./', '', $host) : 'Lainnya';
+        return $host ? preg_replace('/^www\./', '', $host) : __('ui.panel.lainnya');
     }
 }

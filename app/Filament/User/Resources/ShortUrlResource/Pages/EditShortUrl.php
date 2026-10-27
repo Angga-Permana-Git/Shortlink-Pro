@@ -51,7 +51,7 @@ class EditShortUrl extends EditRecord
 
         Notification::make()
             ->success()
-            ->title('Tautan berhasil diubah')
+            ->title(__('ui.panel.berhasil_diubah'))
             ->send();
 
         return $shortUrl;

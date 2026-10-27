@@ -26,11 +26,17 @@ class LinktreeSettings extends Page
 {
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedLink;
 
-    protected static ?string $navigationLabel = 'Linktree';
-
-    protected static ?string $title = 'Halaman Linktree Saya';
-
     protected string $view = 'filament.user.pages.linktree-settings';
+
+    public static function getNavigationLabel(): string
+    {
+        return __('ui.panel.navigasi_linktree');
+    }
+
+    public function getTitle(): string
+    {
+        return __('ui.panel.judul_linktree');
+    }
 
     public array $data = [];
 
@@ -56,41 +62,41 @@ class LinktreeSettings extends Page
         return $schema
             ->schema([
                 TextInput::make('display_name')
-                    ->label('Nama yang tampil di halaman publik')
+                    ->label(__('ui.panel.nama_publik'))
                     ->required()
                     ->maxLength(255),
                 TextInput::make('public_slug')
-                    ->label('Alamat publik')
-                    ->helperText('Huruf kecil, angka, dan tanda hubung. Dipakai pada /u/{alamat}.')
+                    ->label(__('ui.panel.alamat_publik'))
+                    ->helperText(__('ui.panel.helper_alamat_publik'))
                     ->prefix('u/')
                     ->required()
                     ->maxLength(60)
                     ->rules(fn (): array => AturanProfilLinktree::alamatPublik(auth()->id())),
                 Textarea::make('bio')
-                    ->label('Deskripsi singkat')
+                    ->label(__('ui.panel.deskripsi_singkat'))
                     ->rows(2)
-                    ->placeholder('cth: Penulis lepas yang suka berbagi tautan bermanfaat.')
+                    ->placeholder(__('ui.panel.placeholder_bio'))
                     ->maxLength(500),
                 Toggle::make('is_active')
-                    ->label('Terbitkan halaman publik')
-                    ->helperText('Jika dimatikan, pengunjung tidak bisa membuka halaman Anda.'),
+                    ->label(__('ui.panel.terbitkan_halaman'))
+                    ->helperText(__('ui.panel.helper_terbitkan')),
                 Repeater::make('links')
-                    ->label('Daftar tautan')
-                    ->addActionLabel('Tambah tautan')
+                    ->label(__('ui.panel.daftar_tautan'))
+                    ->addActionLabel(__('ui.panel.tambah_tautan'))
                     ->reorderableWithButtons()
                     ->itemLabel(fn (?array $state): ?string => $state['label'] ?? null)
                     ->schema([
                         TextInput::make('label')
-                            ->label('Judul tautan')
+                            ->label(__('ui.panel.judul_tautan'))
                             ->required()
                             ->maxLength(255),
                         TextInput::make('url')
-                            ->label('Alamat tautan')
+                            ->label(__('ui.panel.alamat_tautan'))
                             ->required()
                             ->url()
                             ->maxLength(2048),
                         Toggle::make('is_active')
-                            ->label('Aktif')
+                            ->label(__('ui.panel.aktif'))
                             ->default(true),
                     ]),
             ])
@@ -108,7 +114,7 @@ class LinktreeSettings extends Page
 
         $this->service()->syncLinks($profile, $this->linksFrom($data['links'] ?? []));
 
-        Notification::make()->success()->title('Halaman Linktree tersimpan')->send();
+        Notification::make()->success()->title(__('ui.panel.tersimpan'))->send();
     }
 
     /**

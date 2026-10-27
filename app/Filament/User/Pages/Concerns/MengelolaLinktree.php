@@ -65,7 +65,7 @@ trait MengelolaLinktree
         app(LinktreeSayaService::class)->simpanPilihan($pengguna, $this->pilihanLinktree, $this->terbitkan);
 
         $this->pilihanLinktree = $this->idTautanTerpilih($layanan, $pengguna);
-        $this->pesanPilihan = 'Pilihan Linktree tersimpan.';
+        $this->pesanPilihan = __('ui.panel.pilihan_tersimpan');
     }
 
     public function simpanProfil(): void
@@ -93,14 +93,14 @@ trait MengelolaLinktree
         // ulang pada penyimpanan berikutnya.
         $this->profil['logo'] = null;
 
-        $this->pesanProfil = 'Profil Linktree tersimpan.';
+        $this->pesanProfil = __('ui.panel.profil_tersimpan');
     }
 
     public function hapusLogo(): void
     {
         app(LinktreeAvatarService::class)->hapus(auth()->user());
 
-        $this->pesanProfil = 'Logo profil dihapus.';
+        $this->pesanProfil = __('ui.panel.logo_dihapus');
     }
 
     public function ubahStatusTerbit(): void

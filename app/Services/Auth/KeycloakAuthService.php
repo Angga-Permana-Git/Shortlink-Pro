@@ -5,6 +5,7 @@ namespace App\Services\Auth;
 use App\Dto\RequestContextDTO;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Setting\LocaleService;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as SocialiteUser;
@@ -21,6 +22,7 @@ class KeycloakAuthService
     public function __construct(
         private readonly KeycloakAccountService $accounts,
         private readonly LoginAuditRecorder $audit,
+        private readonly LocaleService $locale,
     ) {}
 
     public function handleSocialiteUser(SocialiteUser $socialUser, RequestContextDTO $context): User
@@ -28,6 +30,9 @@ class KeycloakAuthService
         $user = $this->accounts->provision($socialUser, $context);
 
         Auth::login($user);
+
+        // Pilihan bahasa tamu di halaman masuk dibawa ke akun yang baru masuk.
+        $this->locale->simpanDariSesi($user);
 
         $this->audit->record($user->getKey(), $user->username, 'keycloak', 'success', $context);
         AuditLogger::log($user, 'auth.login', 'user', $user->id, ['provider' => 'keycloak']);

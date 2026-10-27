@@ -28,7 +28,7 @@ trait MengelolaZonaWaktu
                 'required',
                 Rule::in(timezone_identifiers_list(DateTimeZone::ALL_WITH_BC)),
             ],
-        ], [], ['zonaWaktu' => 'zona waktu']);
+        ], [], ['zonaWaktu' => __('ui.panel.zona_waktu')]);
 
         $pengguna = auth()->user();
 
@@ -37,7 +37,7 @@ trait MengelolaZonaWaktu
             $pengguna->save();
         }
 
-        $this->pesanZonaWaktu = 'Zona waktu disimpan.';
+        $this->pesanZonaWaktu = __('ui.panel.zona_waktu_tersimpan');
     }
 
     /**

@@ -35,11 +35,11 @@ class UserKesehatanService
     {
         $angka = $this->ringkasan($pengguna);
         $butir = [
-            ['Kedaluwarsa ≤7 hari', 'Tautan aktif yang segera berakhir.', 'kedaluwarsa_7', 'expiring', 'tautan'],
-            ['Sudah kedaluwarsa', 'Tautan yang tidak dapat dibuka lagi.', 'sudah_kedaluwarsa', 'expired', 'tautan'],
-            ['Terjadwal', 'Tautan yang belum aktif.', 'terjadwal', 'scheduled', 'tautan'],
-            ['Belum pernah diklik', 'Tautan yang belum menghasilkan klik.', 'belum_diklik', 'never', 'tautan'],
-            ['Klik gagal', 'Percobaan dengan kata sandi salah.', 'klik_gagal', 'failed', 'tautan'],
+            [__('ui.panel.kesehatan_kedaluwarsa_7'), __('ui.panel.kesehatan_kedaluwarsa_7_pesan'), 'kedaluwarsa_7', 'expiring', 'tautan'],
+            [__('ui.panel.kesehatan_sudah_kedaluwarsa'), __('ui.panel.kesehatan_sudah_kedaluwarsa_pesan'), 'sudah_kedaluwarsa', 'expired', 'tautan'],
+            [__('ui.panel.kesehatan_terjadwal'), __('ui.panel.kesehatan_terjadwal_pesan'), 'terjadwal', 'scheduled', 'tautan'],
+            [__('ui.panel.kesehatan_belum_diklik'), __('ui.panel.kesehatan_belum_diklik_pesan'), 'belum_diklik', 'never', 'tautan'],
+            [__('ui.panel.kesehatan_klik_gagal'), __('ui.panel.kesehatan_klik_gagal_pesan'), 'klik_gagal', 'failed', 'tautan'],
         ];
 
         $hasil = collect($butir)
@@ -53,11 +53,11 @@ class UserKesehatanService
             ])->values()->all();
 
         if ($angka['linktree_kosong']) {
-            $hasil[] = ['judul' => 'Linktree kosong', 'pesan' => 'Halaman publik terbit tanpa tautan.', 'jumlah' => 1, 'filter' => '', 'target' => 'linktree'];
+            $hasil[] = ['judul' => __('ui.panel.kesehatan_linktree_kosong'), 'pesan' => __('ui.panel.kesehatan_linktree_kosong_pesan'), 'jumlah' => 1, 'filter' => '', 'target' => 'linktree'];
         }
 
         if ($angka['linktree_tanpa_alamat']) {
-            $hasil[] = ['judul' => 'Alamat Linktree kosong', 'pesan' => 'Isi alamat publik agar halaman bisa dibagikan.', 'jumlah' => 1, 'filter' => '', 'target' => 'linktree'];
+            $hasil[] = ['judul' => __('ui.panel.kesehatan_linktree_tanpa_alamat'), 'pesan' => __('ui.panel.kesehatan_linktree_tanpa_alamat_pesan'), 'jumlah' => 1, 'filter' => '', 'target' => 'linktree'];
         }
 
         return $hasil;

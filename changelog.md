@@ -43,6 +43,87 @@ Migrasi
 
 ---
 
+[2026-10-27] Persiapan push ke GitLab: `.gitignore` + README keadaan terkini
+
+Perlu Perhatian
+- Lingkungan sudah diverifikasi ulang sebelum di-push: `pint --test` passed, `php artisan test` 218 passed (863 assertions), `npm run build` 71 modul (±133 kB, ±37 kB gzip).
+
+Ditambahkan
+- Pola `.gitignore` untuk artefak operasional yang belum tercakup: cadangan basis data dan arsip unggahan (`/backup-*.sql`, `/backup-*.sql.gz`, `/storage-*.tar.gz`, `*.sql.gz`, `*.tar.gz`), log npm/yarn (`npm-debug.log*`, `yarn-error.log*`, `.pnpm-debug.log*`), direktori data Docker lokal (`/.docker/data`), dan `/.vagrant`.
+- Pola `**/secrets/` sebagai generalisasi dari `shortlink-pro-dockerapp-nginxhost/secrets/`, supaya folder rahasia di subfolder mana pun juga terabaikan.
+- Bagian **Status Pengembangan** di `README.md`: apa yang sudah selesai dan dikunci test, serta tindak lanjut yang masih terbuka (penerjemahan panel admin, uji lebar 768 px, build Docker di mesin ber-Docker, isi `PEMENDEK_SAFE_BROWSING_KEY`, dan belum ada server produksi).
+
+Diubah
+- **Alasan:** README sebelumnya belum menyebut halaman daftar (contoh isian + tombol lihat sandi) dan belum mencatat bahwa pilihan bahasa ikut tersimpan ke akun saat daftar/masuk.
+- `README.md`: bagian "Tentang" menjelaskan bahasa per pengguna; bagian Fitur mendapat subbagian baru "Akun dan bahasa" (registrasi, petunjuk pola, tombol lihat/sembunyikan sandi, `LocaleService::simpanDariSesi()`); duplikat baris "dua bahasa" dihapus dari "Panel dan operasional".
+- `README.md`: "Struktur Proyek" diselaraskan dengan struktur nyata (`app/Exceptions/`, `app/Console/Commands/`, `bootstrap/`, `lang/{id,en}/`, `resources/{css,js}/publik/`, `routes/console.php`), dan "Pengujian" memuat angka hasil verifikasi terakhir.
+
+**Berkas:** `.gitignore`, `README.md`, `changelog.md`
+**Verifikasi:** `git check-ignore` mengonfirmasi pola baru menangkap `backup-*.sql`, `storage-*.tar.gz`, `yarn-error.log`, dan `.docker/data/mysql` tanpa mengabaikan berkas terlacak; `pint --test` passed; `artisan test` 218 passed (863 assertions); `npm run build` 71 modul; tidak ada berkas sensitif (`.env`, kunci, secret) yang terlacak Git.
+
+---
+
+[2026-10-23] Panel pengguna mengikuti bahasa akun
+
+Perlu Perhatian
+- Aset tidak berubah, jadi `npm run build` tidak diperlukan untuk perubahan ini. Setelah deploy, cukup muat ulang halaman panel agar teks baru tampil.
+
+Diperbaiki
+- Panel pengguna tetap berbahasa Indonesia meskipun akun sudah memilih English. Ternyata pilihan bahasa **sudah tersimpan benar** (`users.locale = en`); masalahnya teks panel ditulis langsung dalam Bahasa Indonesia di Blade, trait, dan resource Filament, sehingga tidak pernah mengikuti locale aplikasi.
+- Filter status pada daftar tautan membandingkan teks Indonesia; kini memakai kode status (`active`, `inactive`, `expired`, `scheduled`, `protected`, `forever`) agar tetap benar di kedua bahasa.
+
+Diubah
+- Seluruh teks panel pengguna dialihkan ke `__('ui.panel.*')`: dashboard (statistik, tren, zona waktu), kesehatan tautan, aktivitas klik, statistik Linktree, kartu pemendek, daftar tautan, baris tautan, sunting tautan, QR, profil Linktree, pengaturan Linktree, banner impersonasi, serta notifikasi aksi.
+- `UserDaftarTautanService` menambah kunci `status` berupa kode; `UserAktivitasService` menambah `status` per rincian kualitas klik; `UserKesehatanService` memakai kunci terjemahan untuk judul dan pesan.
+- `ShortUrlResource`, halaman Create/Edit/View, dan widget `MyLinksOverview` memakai label terjemahan.
+- `lang/id/ui.php` dan `lang/en/ui.php` dilengkapi kunci panel yang sebelumnya belum ada (status, placeholder alamat publik, tooltip salin, dan lain-lain).
+- `tests/Feature/PanelBahasaTest.php` baru: memastikan panel berbahasa Inggris untuk akun `locale=en` dan berbahasa Indonesia untuk `locale=id`.
+- Uji sementara `tests/Feature/TmpLocalePanelTest.php` dihapus.
+
+**Berkas:** `app/Filament/User/Resources/ShortUrlResource.php`, `app/Filament/User/Resources/ShortUrlResource/Pages/{Create,Edit,View}ShortUrl.php`, `app/Filament/User/Widgets/MyLinksOverview.php`, `app/Filament/User/Pages/LinktreeSettings.php`, `app/Filament/User/Pages/Concerns/{MengelolaTautan,MengelolaLinktree,MengelolaZonaWaktu}.php`, `app/Services/Dashboard/{UserDaftarTautanService,UserKesehatanService,UserAktivitasService}.php`, `resources/views/filament/user/**`, `lang/{id,en}/ui.php`, `tests/Feature/PanelBahasaTest.php`
+**Verifikasi:** `pint` passed; `artisan test` 218 passed (863 assertions), termasuk `PanelBahasaTest`.
+
+---
+
+[2026-10-23] Pilihan bahasa tamu disimpan ke akun saat daftar dan masuk
+
+Diperbaiki
+- Bahasa yang dipilih di halaman masuk/daftar kembali ke bahasa bawaan setelah pengguna keluar lalu masuk lagi, karena pilihan tamu hanya tersimpan di sesi sementara kolom `users.locale` akun baru masih kosong.
+- **Akar masalah:** `RegisterController` dan service masuk tidak pernah menyalin `session('locale')` ke akun; `SetLocale` memang memprioritaskan `users.locale`, sehingga sesi baru jatuh ke `config('bahasa.bawaan')`.
+
+Diubah
+- `LocaleService::simpanDariSesi(User $pengguna)` baru: membaca `session('locale')`, memvalidasinya lewat `sah()`, lalu memakai `simpan()` (tetap mencatat audit `locale.update`).
+- Dipanggil setelah autentikasi berhasil di `LocalAuthService`, `GoogleAuthService`, `KeycloakAuthService`, dan `RegisterController::store`.
+- Impersonasi admin sengaja **tidak** memakai cara ini agar bahasa target tidak tertimpa bahasa admin.
+- `tests/Feature/BahasaTest.php`: dua test baru — pilihan tamu tersimpan saat daftar dan saat masuk lokal.
+
+**Berkas:** `app/Services/Setting/LocaleService.php`, `app/Services/Auth/LocalAuthService.php`, `app/Services/Auth/GoogleAuthService.php`, `app/Services/Auth/KeycloakAuthService.php`, `app/Http/Controllers/RegisterController.php`, `tests/Feature/BahasaTest.php`
+**Verifikasi:** `pint` passed, `artisan test` 216 passed (848 assertions).
+
+---
+
+[2026-10-23] Halaman daftar: contoh isian dan tombol lihat kata sandi
+
+Perlu Perhatian
+- Aset publik berubah (`resources/js/publik/auth.js`, `resources/css/publik/auth.css`), jadi jalankan `npm run build` sebelum deploy.
+- Modul `auth.js` hanya dimuat di halaman daftar; halaman auth lain tidak terpengaruh.
+
+Ditambahkan
+- Placeholder contoh isian: "Mis. Budi Santoso", "mis. budi_santoso", dan "nama@contoh.com".
+- Tombol lihat/sembunyikan kata sandi pada kolom kata sandi dan ulangi kata sandi, lengkap dengan `aria-pressed`, `aria-controls`, label yang berubah, serta ikon mata buka/tercoret.
+- `tests/Feature/RegisterPageTest.php` yang memastikan contoh isian, petunjuk, dan dua tombol sandi tampil.
+
+Diubah
+- **Alasan:** pengguna baru tidak tahu pola nama pengguna dan tidak bisa memeriksa salah ketik kata sandi; keduanya memperbesar peluang gagal daftar.
+- Petunjuk kata sandi tidak lagi menyalin label, melainkan "Minimal 12 karakter.".
+- Kolom nama pengguna mendapat `pattern="[A-Za-z0-9_-]+"`, `title`, serta petunjuk "Huruf, angka, tanda hubung, dan garis bawah." agar aturan `alpha_dash` terlihat sebelum submit.
+- `lang/id/ui.php` dan `lang/en/ui.php` mendapat kunci `contoh_nama`, `contoh_username`, `contoh_email`, `petunjuk_username`, `petunjuk_sandi`, `lihat_sandi`, dan `sembunyikan_sandi`.
+
+**Berkas:** `resources/views/auth/register.blade.php`, `resources/js/publik/auth.js`, `resources/css/publik/auth.css`, `vite.config.js`, `lang/id/ui.php`, `lang/en/ui.php`, `tests/Feature/RegisterPageTest.php`
+**Verifikasi:** `pint` passed, `artisan test` 214 passed (837 assertions), `npm run build` berhasil (auth.css 4,77 kB; auth.js 0,49 kB).
+
+---
+
 [2026-10-23] Repo siap publik: pembersihan Git + README ditulis ulang
 
 Perlu Perhatian

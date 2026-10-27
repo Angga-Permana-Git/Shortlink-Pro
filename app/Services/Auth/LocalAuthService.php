@@ -4,6 +4,7 @@ namespace App\Services\Auth;
 
 use App\Dto\RequestContextDTO;
 use App\Services\Audit\AuditLogger;
+use App\Services\Setting\LocaleService;
 use App\Support\Enums\LoginOutcome;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -24,6 +25,7 @@ class LocalAuthService
     public function __construct(
         private readonly LocalAccountVerifier $verifier,
         private readonly LoginAuditRecorder $audit,
+        private readonly LocaleService $locale,
     ) {}
 
     public function attempt(string $identifier, string $password, RequestContextDTO $context): LoginOutcome
@@ -45,6 +47,10 @@ class LocalAuthService
         RateLimiter::clear($key);
 
         Auth::login($user);
+
+        // Bahasa yang dipilih tamu di halaman masuk ikut disimpan ke akun agar
+        // tidak kembali ke bahasa bawaan pada kunjungan berikutnya.
+        $this->locale->simpanDariSesi($user);
 
         $user->forceFill(['last_login_at' => now()])->save();
 

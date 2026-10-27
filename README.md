@@ -10,7 +10,7 @@
 [![MySQL](https://img.shields.io/badge/MySQL-8-4479A1?logo=mysql&logoColor=white)](https://www.mysql.com)
 [![License](https://img.shields.io/badge/Lisensi-MIT-3DA639)](LICENSE)
 
-[Fitur](#fitur) · [Instalasi](#mulai-cepat) · [Konfigurasi](#konfigurasi) · [Deployment](#deployment) · [Pengujian](#pengujian)
+[Fitur](#fitur) · [Instalasi](#mulai-cepat) · [Konfigurasi](#konfigurasi) · [Deployment](#deployment) · [Pengujian](#pengujian) · [Status](#status-pengembangan)
 
 </div>
 
@@ -24,6 +24,8 @@ Shortlink Pro adalah aplikasi pemendek tautan yang dapat dipakai untuk dua kebut
 - **Terkelola** — pengguna dengan akun dapat mengelola tautan, melihat statistik klik, mengekspor data, dan memiliki halaman Linktree pribadi. Administrator memegang kendali penuh lewat panel Filament.
 
 Administrator juga dapat mengaktifkan **wajib SSO**, sehingga tamu diarahkan ke Keycloak sebelum dapat memakai aplikasi. Setiap tautan memiliki pemilik yang jelas, masa berlaku opsional, proteksi kata sandi, dan analitik klik.
+
+Antarmuka tersedia dalam **dua bahasa** (Bahasa Indonesia dan English) dan mengikuti pilihan setiap pengguna: tamu memakai sesi sendiri, sedangkan pengguna yang masuk memakai kolom `users.locale`. Pilihan bahasa yang dibuat di halaman daftar atau masuk ikut tersimpan ke akun, jadi tetap berlaku pada kunjungan berikutnya.
 
 ## Fitur
 
@@ -51,14 +53,22 @@ Administrator juga dapat mengaktifkan **wajib SSO**, sehingga tamu diarahkan ke 
 - Daftar tautan yang dapat diurutkan, masing-masing dengan penghitung klik.
 - Pencatatan event klik Linktree untuk analitik.
 
+### Akun dan bahasa
+
+- Registrasi lokal di `/register` dengan contoh isian (nama, nama pengguna, email) agar pola pengisian langsung terlihat.
+- Petunjuk nama pengguna (`pattern="[A-Za-z0-9_-]+"`) dan syarat kata sandi ("Minimal 12 karakter.") tampil sebelum formulir dikirim.
+- Tombol **lihat/sembunyikan kata sandi** pada kolom kata sandi dan ulang kata sandi, lengkap dengan `aria-pressed`, `aria-controls`, dan ikon mata.
+- Pilihan bahasa dapat diganti dari beranda maupun bilah atas panel; pilihan tamu disimpan di sesi, pilihan pengguna masuk di kolom `users.locale`.
+- Pilihan bahasa pada halaman daftar/masuk ikut tersimpan ke akun setelah autentikasi berhasil (`LocaleService::simpanDariSesi()`), kecuali saat admin melakukan impersonasi.
+- Bahasa antarmuka: Bahasa Indonesia (bawaan) dan English; pesan validasi, autentikasi, dan atur ulang kata sandi juga sudah diterjemahkan.
+
 ### Panel dan operasional
 
 - **Panel pengguna**: dashboard, CRUD tautan, pengaturan Linktree, ekspor CSV.
 - **Panel admin**: pengguna, tautan, profil Linktree, audit log, audit login, riwayat perubahan peran, impor CSV, ekspor log, impersonasi pengguna.
 - Pengaturan admin: branding (logo/nama), keamanan akun (2FA, IP admin yang diizinkan, wajib SSO), operasional (slug dicadangkan, kedaluwarsa bawaan, retensi log, batas laju, pengumuman), dan zona waktu.
 - Notifikasi dalam aplikasi untuk admin (mis. tautan bermasalah atau antrean perhatian).
-- Antarmuka dua bahasa: Bahasa Indonesia dan English.
-- Perintah terjadwal: pembersihan log harian dan pengingat operasional per jam.
+- Perintah terjadwal: pembersihan log harian, pengingat operasional per jam, dan denyut penjadwal untuk widget status.
 
 ### API
 
@@ -219,6 +229,7 @@ Arahkan document root nginx ke `public/`, jalankan PHP-FPM, lalu tambahkan cron 
 
 ```text
 app/
+├── Console/Commands/        # Perintah operasional & penjadwal
 ├── Dto/                     # Objek transfer data
 ├── Filament/
 │   ├── Admin/               # Resource & pengaturan admin
@@ -230,23 +241,58 @@ app/
 ├── Models/                  # Eloquent
 ├── Services/                # ShortUrl, Linktree, Analytics, Auth, Setting, ...
 ├── Support/                 # Enum, validasi, helper
-└── Console/Commands/        # Perintah operasional
+└── Exceptions/              # Format galat seragam (error_code, trace_id)
 
+bootstrap/                   # app.php, providers, cache
 config/                      # Termasuk pemendek.php (QR, kata sandi, Safe Browsing)
 database/migrations/         # Skema pengguna, tautan, klik, Linktree, audit, 2FA
 docker/                      # Konfigurasi image Docker
+lang/{id,en}/                # ui.php, validation, auth, passwords, en.json
+resources/
+├── css/publik/              # dasar, beranda, auth, panel, tautan, linktree
+├── js/publik/               # beranda.js, panel.js, auth.js
+└── views/                   # Blade publik, auth, panel Filament
+routes/                      # web.php, api.php, console.php
 shortlink-pro-dockerapp-nginxhost/  # Paket deploy produksi
-tests/                       # Feature & unit test
+storage/                     # Log, cache, unggahan (runtime, tidak di-commit)
+tests/                       # Feature, unit, dan skenario E2E (tests/e2e)
 ```
 
 ## Pengujian
 
 ```bash
-php artisan test
-vendor/bin/pint --test
+php artisan test                 # 218 test, 863 assertion (terakhir diverifikasi 2026-10-23)
+vendor/bin/pint --test           # cek gaya kode
+npm run build                    # 71 modul, ±133 kB aset (±37 kB gzip)
 ```
 
 Pedoman dan skenario E2E ada di [uji_e2e.md](uji_e2e.md); konfigurasi di `e2e.config.ts`. Uji E2E memakai basis data dan URL terpisah dari pengembangan/produksi.
+
+## Status Pengembangan
+
+Keadaan per 2026-10-23, setelah 218 test dan `pint` lolos:
+
+**Sudah selesai dan dikunci test**
+
+- Pemendek tautan: slug otomatis/kustom, masa berlaku, soft delete, proteksi kata sandi dengan penguncian percobaan, kode QR bercache.
+- Pemeriksaan tujuan ke Google Safe Browsing di lapisan validasi, dengan fail-open bila kunci kosong; impor CSV sengaja melewatinya.
+- Analitik: tren, domain tujuan, jam/hari tersibuk, kualitas klik, kesehatan tautan, dan statistik Linktree lewat `linktree_events`.
+- Panel pengguna satu lembar (`/user`) berisi empat kartu: Dashboard, Pemendek Tautan, Link Saya, Profil Linktree.
+- Panel admin: pengguna, tautan, moderasi Linktree, empat halaman log dengan ekspor CSV, impor CSV, 2FA, allowlist IP, impersonasi, dan pengaturan branding/operasional.
+- Dua bahasa penuh di sisi pengguna dan publik; label kustom panel admin juga sudah diterjemahkan (`lang/en.json`, 332 kunci), meski sebagian teks bawaan Filament masih mengikuti paket.
+- Registrasi dengan contoh isian dan tombol lihat/sembunyikan kata sandi.
+- Paket deploy produksi `shortlink-pro-dockerapp-nginxhost/` (nginx host + Cloudflare Tunnel) dan `Dockerfile` empat tahap.
+- PHP sudah di-patch untuk PHP2Shell; prosedur ada di [SECURITY.md](SECURITY.md).
+
+**Tindak lanjut yang masih terbuka**
+
+- Panel admin masih menyisakan teks Indonesia tetap; penerjemahan bertahap bila ingin dua bahasa penuh di sisi admin.
+- Verifikasi tampilan pada lebar layar 768 px (360 px sudah diperiksa).
+- Uji coba build dan jalankan image Docker di mesin ber-Docker, termasuk `/up`, unggah logo, dan `queue:work`.
+- Isi `PEMENDEK_SAFE_BROWSING_KEY` di produksi; tanpa kunci, tautan berbahaya lolos tanpa pemeriksaan.
+- Server produksi belum ada; seluruh node wajib PHP 8.2.35/8.3.36/8.4.27/8.5.12 dengan `session.upload_progress.enabled=Off`.
+
+Daftar tugas berjalan lengkap ada di `.aicontext/activetodo.md` (tidak ikut ter-commit).
 
 ## Dokumentasi
 

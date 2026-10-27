@@ -31,11 +31,20 @@ class ShortUrlResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'slug';
 
-    protected static ?string $modelLabel = 'Tautan Pendek';
+    public static function getModelLabel(): string
+    {
+        return __('ui.panel.model_tautan');
+    }
 
-    protected static ?string $pluralModelLabel = 'Tautan Pendek';
+    public static function getPluralModelLabel(): string
+    {
+        return __('ui.panel.model_tautan');
+    }
 
-    protected static ?string $navigationLabel = 'Link Saya';
+    public static function getNavigationLabel(): string
+    {
+        return __('ui.panel.navigasi_link_saya');
+    }
 
     public static function getEloquentQuery(): Builder
     {
@@ -51,40 +60,40 @@ class ShortUrlResource extends Resource
     {
         return $schema
             ->schema([
-                Section::make('Detail Tautan')
-                    ->description('Buat tautan pendek milik Anda.')
+                Section::make(__('ui.panel.detail_tautan'))
+                    ->description(__('ui.panel.detail_tautan_catatan'))
                     ->schema([
                         TextInput::make('_slug')
-                            ->label('Nama Pendek Kustom (opsional)')
-                            ->placeholder('cth: promo-2026')
+                            ->label(__('ui.panel.nama_pendek_opsional'))
+                            ->placeholder(__('ui.panel.placeholder_slug'))
                             ->prefix(fn () => rtrim(config('app.url'), '/').'/')
                             ->live()
                             ->helperText(fn ($state) => filled($state)
-                                ? 'Tautan pendek jadi: '.rtrim(config('app.url'), '/').'/'.$state
-                                : 'Kosongkan untuk membuat slug acak otomatis.')
+                                ? __('ui.panel.slug_jadi', ['url' => rtrim(config('app.url'), '/').'/'.$state])
+                                : __('ui.panel.slug_acak'))
                             ->maxLength(100),
                         TextInput::make('destination_url')
-                            ->label('URL Tujuan')
+                            ->label(__('ui.panel.url_tujuan'))
                             ->url()
                             ->required()
-                            ->placeholder('https://example.com/halaman-tujuan')
+                            ->placeholder(__('ui.panel.placeholder_url_tujuan'))
                             ->columnSpanFull(),
-                        Toggle::make('is_active')->label('Aktif')->default(true),
-                        DateTimePicker::make('starts_at')->label('Mulai aktif'),
-                        DateTimePicker::make('expires_at')->label('Kedaluwarsa'),
+                        Toggle::make('is_active')->label(__('ui.panel.aktif'))->default(true),
+                        DateTimePicker::make('starts_at')->label(__('ui.panel.mulai_aktif')),
+                        DateTimePicker::make('expires_at')->label(__('ui.panel.kedaluwarsa')),
                     ]),
-                Section::make('Proteksi Kata Sandi')
-                    ->description('Lindungi tautan dengan kata sandi. Kata sandi tidak pernah ditampilkan kembali.')
+                Section::make(__('ui.panel.proteksi_sandi'))
+                    ->description(__('ui.panel.proteksi_sandi_catatan'))
                     ->schema([
                         Toggle::make('_protected')
-                            ->label('Lindungi dengan kata sandi')
+                            ->label(__('ui.panel.lindungi_sandi'))
                             ->live()
                             ->default(fn (?ShortUrl $record) => filled($record?->password_hash)),
                         TextInput::make('_password')
-                            ->label('Kata sandi tautan')
+                            ->label(__('ui.panel.kata_sandi_tautan'))
                             ->password()
                             ->revealable()
-                            ->placeholder('cth: rahasia123')
+                            ->placeholder(__('ui.panel.placeholder_sandi'))
                             ->required(fn ($get) => (bool) $get('_protected'))
                             ->visible(fn ($get) => (bool) $get('_protected')),
                     ]),
@@ -97,30 +106,30 @@ class ShortUrlResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('slug')
-                    ->label('Tautan Pendek')
+                    ->label(__('ui.panel.model_tautan'))
                     ->searchable()
                     ->sortable()
                     ->color('primary')
                     ->copyable()
                     ->copyableState(fn (ShortUrl $record) => $record->shortUrl())
-                    ->tooltip(fn (ShortUrl $record) => 'Klik untuk salin: '.$record->shortUrl())
+                    ->tooltip(fn (ShortUrl $record) => __('ui.panel.tooltip_salin', ['url' => $record->shortUrl()]))
                     ->url(fn (ShortUrl $record) => route('redirect.show', $record->slug)),
-                TextColumn::make('destination_url')->limit(45)->label('URL Tujuan'),
-                IconColumn::make('is_active')->boolean()->label('Aktif'),
-                TextColumn::make('total_clicks')->label('Total Klik')->sortable()->badge(),
-                TextColumn::make('expires_at')->label('Kedaluwarsa')
+                TextColumn::make('destination_url')->limit(45)->label(__('ui.panel.url_tujuan')),
+                IconColumn::make('is_active')->boolean()->label(__('ui.panel.aktif')),
+                TextColumn::make('total_clicks')->label(__('ui.panel.total_klik'))->sortable()->badge(),
+                TextColumn::make('expires_at')->label(__('ui.panel.kedaluwarsa'))
                     ->formatStateUsing(fn (ShortUrl $record) => app(UserTimezoneService::class)
                         ->format($record->expires_at, auth()->user()))
                     ->color(fn (ShortUrl $record) => $record->isExpired() ? 'danger' : 'gray'),
-                TextColumn::make('created_at')->label('Dibuat')
+                TextColumn::make('created_at')->label(__('ui.panel.dibuat'))
                     ->formatStateUsing(fn (ShortUrl $record) => app(UserTimezoneService::class)
                         ->format($record->created_at, auth()->user()))
                     ->sortable(),
             ])
             ->filters([
                 SelectFilter::make('status')
-                    ->label('Status')
-                    ->options(fn () => collect(LinkStatus::cases())->mapWithKeys(fn ($c) => [$c->value => $c->label()])->all()),
+                    ->label(__('ui.panel.status'))
+                    ->options(fn () => collect(LinkStatus::cases())->mapWithKeys(fn ($c) => [$c->value => __("ui.panel.status_{$c->value}")])->all()),
             ])
             ->actions([
                 ViewAction::make(),

@@ -5,6 +5,7 @@ namespace App\Services\Auth;
 use App\Dto\RequestContextDTO;
 use App\Models\User;
 use App\Services\Audit\AuditLogger;
+use App\Services\Setting\LocaleService;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Two\User as SocialiteUser;
 
@@ -19,6 +20,7 @@ class GoogleAuthService
     public function __construct(
         private readonly GoogleAccountService $accounts,
         private readonly LoginAuditRecorder $audit,
+        private readonly LocaleService $locale,
     ) {}
 
     public function handleSocialiteUser(SocialiteUser $socialUser, RequestContextDTO $context): User
@@ -26,6 +28,9 @@ class GoogleAuthService
         $user = $this->accounts->provision($socialUser, $context);
 
         Auth::login($user);
+
+        // Pilihan bahasa tamu di halaman masuk dibawa ke akun yang baru masuk.
+        $this->locale->simpanDariSesi($user);
 
         $this->audit->record($user->getKey(), $user->username, 'google', 'success', $context);
         AuditLogger::log($user, 'auth.login', 'user', $user->id, ['provider' => 'google']);

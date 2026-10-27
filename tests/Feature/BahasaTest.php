@@ -112,6 +112,45 @@ class BahasaTest extends TestCase
         $this->assertSame('en', $pengguna->fresh()->locale, 'Pilihan admin tidak boleh mengubah bahasa pengguna.');
     }
 
+    public function test_pilihan_bahasa_tamu_ikut_tersimpan_saat_daftar(): void
+    {
+        $this->post(route('bahasa.ganti'), ['locale' => 'en'])
+            ->assertSessionHas('locale', 'en');
+
+        $this->post(route('register.store'), [
+            'name' => 'Budi Santoso',
+            'username' => 'budi_santoso',
+            'email' => 'budi@example.com',
+            'password' => 'kata-sandi-panjang',
+            'password_confirmation' => 'kata-sandi-panjang',
+        ])->assertRedirect('/user');
+
+        $this->assertSame('en', User::where('username', 'budi_santoso')->firstOrFail()->locale);
+
+        // Sesi berikutnya (mis. setelah keluar) tetap memakai pilihan yang sama.
+        $this->get('/user')->assertOk()->assertSee('My Dashboard');
+    }
+
+    public function test_pilihan_bahasa_tamu_ikut_tersimpan_saat_masuk(): void
+    {
+        $pengguna = User::factory()->create([
+            'username' => 'budi_santoso',
+            'is_active' => true,
+            'locale' => null,
+            'password' => 'kata-sandi-panjang',
+        ]);
+
+        $this->post(route('bahasa.ganti'), ['locale' => 'en']);
+
+        $this->post('/login/local', [
+            'username' => 'budi_santoso',
+            'password' => 'kata-sandi-panjang',
+        ])->assertRedirect('/user');
+
+        $this->assertSame('en', $pengguna->fresh()->locale);
+        $this->get('/user')->assertOk()->assertSee('My Dashboard');
+    }
+
     public function test_language_change_is_recorded_in_audit_log(): void
     {
         $pengguna = User::factory()->create();

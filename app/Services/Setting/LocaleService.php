@@ -61,4 +61,24 @@ class LocaleService
             'locale' => $locale,
         ]);
     }
+
+    /**
+     * Bawa pilihan bahasa yang sedang aktif di sesi ke akun pengguna.
+     *
+     * Dipakai tepat setelah pendaftaran atau masuk berhasil: tamu bisa memilih
+     * bahasa di halaman masuk/daftar, dan pilihan itu harus tetap berlaku pada
+     * kunjungan berikutnya, bukan hanya selama sesi itu hidup.
+     */
+    public function simpanDariSesi(User $pengguna): void
+    {
+        if (! request()->hasSession()) {
+            return;
+        }
+
+        $locale = $this->sah(request()->session()->get('locale'));
+
+        if ($locale !== null) {
+            $this->simpan($pengguna, $locale);
+        }
+    }
 }

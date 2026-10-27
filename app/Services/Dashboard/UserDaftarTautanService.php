@@ -25,7 +25,7 @@ class UserDaftarTautanService
      * @param  string  $pencarian  Kata kunci pencarian (slug/tujuan)
      * @param  string  $filterStatus  '' | 'active' | 'inactive' | 'protected' | 'expired'
      * @param  string  $urutkan  'terbaru' | 'klik' | 'abjad'
-     * @return array<int, array{id: int, slug: string, url: string, tujuan: string, klik: int, aktif: bool, bersandi: bool, kedaluwarsa: CarbonInterface|null, dipilih: bool, status_teks: string, aktif_selamanya: bool}>
+     * @return array<int, array{id: int, slug: string, url: string, tujuan: string, klik: int, aktif: bool, bersandi: bool, kedaluwarsa: CarbonInterface|null, dipilih: bool, status: string, status_teks: string, aktif_selamanya: bool}>
      */
     /**
      * @param  string  $filterStatus  '' | 'active' | 'inactive' | 'protected' | 'expired' | 'expiring' | 'scheduled' | 'never' | 'failed'
@@ -75,6 +75,7 @@ class UserDaftarTautanService
                 'bersandi' => $tautan->hasPassword(),
                 'kedaluwarsa' => $this->waktu->kePengguna($tautan->expires_at, $pengguna),
                 'dipilih' => in_array($tautan->shortUrl(), $dipilih, true),
+                'status' => $this->statusKode($tautan),
                 'status_teks' => $this->statusTeks($tautan),
                 'aktif_selamanya' => ! $tautan->expires_at && ! $tautan->starts_at,
             ])
@@ -82,26 +83,41 @@ class UserDaftarTautanService
     }
 
     /**
-     * Teks status ringkas: Aktif, Nonaktif, Kedaluwarsa, Akan Mulai, atau Aktif Selamanya.
+     * Kode status ringkas untuk perbandingan di tampilan: inactive, expired,
+     * scheduled, forever, atau active.
      */
-    private function statusTeks(ShortUrl $tautan): string
+    private function statusKode(ShortUrl $tautan): string
     {
         if (! $tautan->is_active) {
-            return 'Nonaktif';
+            return 'inactive';
         }
 
         if ($tautan->isExpired()) {
-            return 'Kedaluwarsa';
+            return 'expired';
         }
 
         if ($tautan->notStarted()) {
-            return 'Akan Mulai';
+            return 'scheduled';
         }
 
         if (! $tautan->expires_at && ! $tautan->starts_at) {
-            return 'Aktif Selamanya';
+            return 'forever';
         }
 
-        return 'Aktif';
+        return 'active';
+    }
+
+    /**
+     * Teks status ringkas sesuai bahasa aktif.
+     */
+    private function statusTeks(ShortUrl $tautan): string
+    {
+        return match ($this->statusKode($tautan)) {
+            'inactive' => __('ui.panel.nonaktif'),
+            'expired' => __('ui.panel.kedaluwarsa'),
+            'scheduled' => __('ui.panel.akan_mulai'),
+            'forever' => __('ui.panel.aktif_selamanya'),
+            default => __('ui.panel.aktif'),
+        };
     }
 }

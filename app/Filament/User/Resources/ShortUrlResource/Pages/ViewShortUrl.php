@@ -18,24 +18,24 @@ class ViewShortUrl extends ViewRecord
     {
         return $schema
             ->schema([
-                TextEntry::make('slug')->label('Tautan Pendek'),
-                TextEntry::make('destination_url')->label('URL Tujuan')
+                TextEntry::make('slug')->label(__('ui.panel.model_tautan')),
+                TextEntry::make('destination_url')->label(__('ui.panel.url_tujuan'))
                     ->copyable(),
-                IconEntry::make('is_active')->label('Aktif')->boolean(),
-                TextEntry::make('total_clicks')->label('Total klik'),
-                TextEntry::make('last_clicked_at')->label('Klik terakhir')
+                IconEntry::make('is_active')->label(__('ui.panel.aktif'))->boolean(),
+                TextEntry::make('total_clicks')->label(__('ui.panel.total_klik')),
+                TextEntry::make('last_clicked_at')->label(__('ui.panel.klik_terakhir'))
                     ->formatStateUsing(fn (ShortUrl $record) => app(UserTimezoneService::class)
                         ->format($record->last_clicked_at, auth()->user()))
-                    ->placeholder('Belum pernah'),
-                TextEntry::make('starts_at')->label('Mulai aktif')
+                    ->placeholder(__('ui.panel.belum_pernah')),
+                TextEntry::make('starts_at')->label(__('ui.panel.mulai_aktif'))
                     ->formatStateUsing(fn (ShortUrl $record) => app(UserTimezoneService::class)
                         ->format($record->starts_at, auth()->user())),
-                TextEntry::make('expires_at')->label('Kedaluwarsa')
+                TextEntry::make('expires_at')->label(__('ui.panel.kedaluwarsa'))
                     ->formatStateUsing(fn (ShortUrl $record) => app(UserTimezoneService::class)
                         ->format($record->expires_at, auth()->user())),
                 TextEntry::make('has_password')
-                    ->label('Dilindungi kata sandi')
-                    ->formatStateUsing(fn ($record) => $record->hasPassword() ? 'Ya' : 'Tidak'),
+                    ->label(__('ui.panel.dilindungi_sandi'))
+                    ->formatStateUsing(fn ($record) => $record->hasPassword() ? __('ui.panel.ya') : __('ui.panel.tidak')),
             ]);
     }
 }

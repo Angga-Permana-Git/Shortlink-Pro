@@ -76,6 +76,7 @@ docker-compose.override.yaml
 
 # Kata sandi root MySQL untuk deploy produksi (Docker secret).
 /shortlink-pro-dockerapp-nginxhost/secrets/
+**/secrets/
 
 # Sertifikat/kunci privat bila kelak dipakai.
 *.pem
@@ -87,6 +88,26 @@ docker-compose.override.yaml
 *.bak
 *.bak-*
 *.orig
+
+# Cadangan basis data dan arsip unggahan hasil perintah backup di
+# shortlink-pro-dockerapp-nginxhost/README.md (mysqldump + tar). Berisi data
+# produksi, jadi tidak boleh masuk repository.
+/backup-*.sql
+/backup-*.sql.gz
+/storage-*.tar.gz
+*.sql.gz
+*.tar.gz
+
+# Log bawaan npm/yarn.
+npm-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Direktori kerja Docker lokal (volume MySQL/Redis bila di-bind mount).
+/.docker/data
+
+# Mesin virtual lokal.
+/.vagrant
 
 # Liputan pengujian.
 /coverage

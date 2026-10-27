@@ -76,7 +76,7 @@ trait MengelolaTautan
         app(ShortUrlService::class)->update($tautan, $pengguna, UpdateShortUrlDTO::fromArray($tervalidasi));
 
         $this->batalSunting();
-        $this->pesanTautan = 'Tautan diperbarui.';
+        $this->pesanTautan = __('ui.panel.tautan_diperbarui');
     }
 
     /**
@@ -116,6 +116,6 @@ trait MengelolaTautan
 
         // Tautan yang hilang tidak boleh tertinggal sebagai pilihan Linktree.
         $this->pilihanLinktree = array_values(array_diff($this->pilihanLinktree, [$idTautan]));
-        $this->pesanTautan = 'Tautan dihapus.';
+        $this->pesanTautan = __('ui.panel.tautan_dihapus');
     }
 }

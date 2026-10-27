@@ -34,8 +34,8 @@ class CreateShortUrl extends CreateRecord
 
         Notification::make()
             ->success()
-            ->title('Tautan berhasil dibuat')
-            ->body('Tautan pendek: '.$shortUrl->shortUrl())
+            ->title(__('ui.panel.berhasil_dibuat'))
+            ->body(__('ui.panel.slug_jadi', ['url' => $shortUrl->shortUrl()]))
             ->send();
 
         return $shortUrl;

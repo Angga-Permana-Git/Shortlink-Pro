@@ -35,10 +35,10 @@
 @endif
 @if (session('impersonator_id'))
     <div class="bilah-impersonasi" role="status">
-        <span>Anda masuk sebagai <strong>{{ auth()->user()->name }}</strong> melalui akun admin <strong>{{ session('impersonator_name') }}</strong>.</span>
+        <span>{{ __('ui.panel.masuk_sebagai', ['nama' => auth()->user()->name, 'admin' => session('impersonator_name')]) }}</span>
         <form class="bilah-impersonasi__form" action="{{ route('admin.impersonate.stop') }}" method="POST">
             @csrf
-            <button type="submit" class="bilah-impersonasi__tombol">Kembali ke Admin</button>
+            <button type="submit" class="bilah-impersonasi__tombol">{{ __('ui.panel.kembali_admin') }}</button>
         </form>
     </div>
 @endif
