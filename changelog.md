@@ -43,20 +43,40 @@ Migrasi
 
 ---
 
+[2026-10-28] Kunci server ke loopback: IP server bukan lagi pintu masuk aplikasi
+
+⚠️ Perlu Perhatian
+- nginx hanya mendengarkan `127.0.0.1:80`. Alamat `http://<IP-LAN-server>/` tidak bisa dibuka lagi, termasuk dari server itu sendiri; begitu pula `<IP-LAN-server>:9000` dan `:8081`.
+- Akses dari komputer lain sekarang hanya lewat SSH tunnel (`ssh -N -L 8080:127.0.0.1:80 shortlink` lalu `http://localhost:8080`) atau Cloudflare Tunnel.
+- `APP_URL` di `.env` server diubah menjadi `http://127.0.0.1` (sebelumnya `http://127.0.0.1:9000`) karena pintu masuk resmi kini nginx di port 80. Setelah mengubah `.env`, container harus **dibuat ulang** (`docker compose up -d app scheduler`), bukan sekadar `restart`: `env_file` dibaca saat container dibuat.
+
+Diubah
+- Site nginx: `listen 80` → `listen 127.0.0.1:80`, `server_name <IP-LAN-server>` → `server_name _`.
+- **Alasan:** pengguna meminta IP server tidak dipakai di mana pun. IP hanyalah identitas server, bukan alamat aplikasi. Setiap aplikasi cukup menerbitkan port di loopback (`127.0.0.1:<port>` berbeda per aplikasi) dan nginx di host menjadi satu-satunya pintu masuk pada port 80/443.
+
+Diperbaiki
+- `artisan optimize` / `config:cache` gagal dengan `file_put_contents(/var/www/html/bootstrap/cache/config.php): Failed to open stream: Permission denied` bila dijalankan lewat `docker compose exec` (default root).
+- **Akar masalah:** container memakai `cap_drop: ALL` tanpa `DAC_OVERRIDE`, sehingga root tidak bisa menembus izin berkas milik `www-data` pada tmpfs `bootstrap/cache` (`mode=775`, owner `www-data`). Perintah artisan yang menulis cache harus dijalankan sebagai `www-data`: `docker compose exec -u www-data app php artisan ...`.
+
+**Berkas:** `changelog.md`, `/etc/nginx/sites-available/shortlink-pro.conf` dan `.env` (di server, tidak masuk repo)
+**Verifikasi:** `ss -ltnp` hanya memuat `127.0.0.1:80`, `127.0.0.1:9000`, `127.0.0.1:8081`; dari server `curl http://127.0.0.1/up` 200 tetapi `curl http://<IP-LAN-server>/` gagal (`000`) begitu pula port 9000 dan 8081; SSH tunnel `-L 8080:127.0.0.1:80` dari laptop memberi `/up` 200 dan `/login/local` 200; `artisan config:show app` → `url = http://127.0.0.1`; `nginx -t` OK dan `systemctl restart nginx` sukses.
+
+---
+
 [2026-10-28] Akses browser dari komputer lain + skema URL yang benar
 
 Diubah
 - `nginx/shortlink-pro.conf`: `X-Forwarded-Proto` tidak lagi di-hardcode `https`, melainkan `map $http_x_forwarded_proto $forwarded_proto_shortlink { default $http_x_forwarded_proto; '' $scheme; }`. `X-Forwarded-Port` mengikuti skema lewat `map $forwarded_proto_shortlink $forwarded_port_shortlink { default 443; http 80; }`.
-- Site terpasang dengan `listen 80` (semua antarmuka) untuk sementara agar browser di komputer lain bisa membuka `http://172.2.18.52/`; sebelumnya `listen 127.0.0.1:80`.
+- Site terpasang dengan `listen 80` (semua antarmuka) untuk sementara agar browser di komputer lain bisa membuka `http://<IP-LAN-server>/`; sebelumnya `listen 127.0.0.1:80`.
 - `Cara_Pakai_Docker.md` §6: subbagian "Skema URL yang diteruskan" dan "Mengakses tanpa Cloudflare (LAN / uji lokal)"; tabel troubleshooting mendapat baris `ERR_CONNECTION_REFUSED` dari browser komputer lain.
 
 Diperbaiki
-- Tautan yang dibuat lewat akses HTTP langsung berbunyi `https://172.2.18.52/<slug>` sehingga tidak bisa dibuka (origin tidak punya TLS).
-- **Akar masalah:** header `X-Forwarded-Proto https` di-hardcode untuk kebutuhan Cloudflare, jadi setiap permintaan dianggap https. Setelah memakai `map`, akses HTTP menghasilkan `http://172.2.18.52/<slug>` sedangkan permintaan dengan `X-Forwarded-Proto: https` tetap menghasilkan `https://172.2.18.52/<slug>` (tanpa `:80`).
+- Tautan yang dibuat lewat akses HTTP langsung berbunyi `https://<IP-LAN-server>/<slug>` sehingga tidak bisa dibuka (origin tidak punya TLS).
+- **Akar masalah:** header `X-Forwarded-Proto https` di-hardcode untuk kebutuhan Cloudflare, jadi setiap permintaan dianggap https. Setelah memakai `map`, akses HTTP menghasilkan `http://<IP-LAN-server>/<slug>` sedangkan permintaan dengan `X-Forwarded-Proto: https` tetap menghasilkan `https://<IP-LAN-server>/<slug>` (tanpa `:80`).
 - **Alasan tambahan:** `127.0.0.1:9000` dan `127.0.0.1:8081` tidak bisa dibuka dari browser laptop karena keduanya hanya listen di loopback server; perlu SSH tunnel atau `--listen-all`.
 
 **Berkas:** `nginx/shortlink-pro.conf`, `Cara_Pakai_Docker.md`
-**Verifikasi:** dari laptop `http://172.2.18.52/` 200 dan `/up` 200; lewat nginx tanpa header skema, `POST /shorten` 201 menghasilkan `"url":"http://172.2.18.52/<slug>"` dan `GET /<slug>` 302 ke tujuan; dengan `X-Forwarded-Proto: https` (simulasi Cloudflare) menghasilkan `"url":"https://172.2.18.52/<slug>"` tanpa `:80`; SSH tunnel `-L 9000 -L 8081` membuat `http://127.0.0.1:9000/up` dan `http://127.0.0.1:8081/` (phpMyAdmin) merespons 200 dari laptop.
+**Verifikasi:** dari laptop `http://<IP-LAN-server>/` 200 dan `/up` 200; lewat nginx tanpa header skema, `POST /shorten` 201 menghasilkan `"url":"http://<IP-LAN-server>/<slug>"` dan `GET /<slug>` 302 ke tujuan; dengan `X-Forwarded-Proto: https` (simulasi Cloudflare) menghasilkan `"url":"https://<IP-LAN-server>/<slug>"` tanpa `:80`; SSH tunnel `-L 9000 -L 8081` membuat `http://127.0.0.1:9000/up` dan `http://127.0.0.1:8081/` (phpMyAdmin) merespons 200 dari laptop.
 
 ---
 
@@ -83,18 +103,18 @@ Diperbaiki
 [2026-10-27] nginx host terpasang sebagai reverse proxy origin
 
 Ditambahkan
-- nginx 1.24.0 (Ubuntu) di server lab; site `shortlink-pro` aktif dengan `listen 127.0.0.1:80`, `server_name 172.2.18.52`, `proxy_pass http://127.0.0.1:9000`.
+- nginx 1.24.0 (Ubuntu) di server lab; site `shortlink-pro` aktif dengan `listen 127.0.0.1:80`, `server_name <IP-LAN-server>`, `proxy_pass http://127.0.0.1:9000`.
 
 Diubah
 - `install.sh` memakai `systemctl restart nginx` (bukan `reload`) setelah memasang site.
 - `Cara_Pakai_Docker.md` §6 menambahkan langkah pasang paket nginx, hapus site `default`, dan uji `curl -H "Host: ..." http://127.0.0.1/up`; tabel troubleshooting mendapat baris "nginx tetap menyajikan halaman default".
 
 Diperbaiki
-- Setelah `install.sh`, nginx tetap menyajikan halaman default sehingga `curl -H "Host: 172.2.18.52" http://127.0.0.1/up` mengembalikan 404 dari nginx meski `nginx -t` lolos.
+- Setelah `install.sh`, nginx tetap menyajikan halaman default sehingga `curl -H "Host: <IP-LAN-server>" http://127.0.0.1/up` mengembalikan 404 dari nginx meski `nginx -t` lolos.
 - **Akar masalah:** `systemctl reload nginx` hanya mengirim sinyal lalu keluar dengan status 0, sedangkan master gagal `bind()` ke `127.0.0.1:80` karena soket lama `0.0.0.0:80` masih dipegang: `[emerg] bind() to 127.0.0.1:80 failed (98: Address already in use)` → konfigurasi baru tidak pernah dipakai. `restart` memaksa rebind.
 
 **Berkas:** `install.sh`, `Cara_Pakai_Docker.md`, `.aicontext/activetodo.md`
-**Verifikasi:** `nginx -t` OK; `ss -lntp` hanya memuat `127.0.0.1:80` dan `127.0.0.1:9000` (tidak ada listener publik); lewat nginx `GET /up` 200, `GET /` 200, `GET /login` 302 → `/login/local` 200; `POST /shorten` 201 menghasilkan URL `https://172.2.18.52/<slug>` (karena `X-Forwarded-Proto https`), `GET /<slug>` 302 ke tujuan, `GET /qr/<slug>` 200 `image/svg+xml`.
+**Verifikasi:** `nginx -t` OK; `ss -lntp` hanya memuat `127.0.0.1:80` dan `127.0.0.1:9000` (tidak ada listener publik); lewat nginx `GET /up` 200, `GET /` 200, `GET /login` 302 → `/login/local` 200; `POST /shorten` 201 menghasilkan URL `https://<IP-LAN-server>/<slug>` (karena `X-Forwarded-Proto https`), `GET /<slug>` 302 ke tujuan, `GET /qr/<slug>` 200 `image/svg+xml`.
 
 ---
 
