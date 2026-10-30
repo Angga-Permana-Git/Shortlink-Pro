@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Models\LinktreeProfile;
-use Illuminate\Http\Response;
 
 /**
  * Peta situs XML untuk mesin pencari.
@@ -15,7 +14,7 @@ use Illuminate\Http\Response;
  */
 class SitemapController extends Controller
 {
-    public function __invoke(): Response
+    public function __invoke(): \Illuminate\Http\Response
     {
         $halaman = collect([
             ['url' => url('/'), 'waktu' => now()],
