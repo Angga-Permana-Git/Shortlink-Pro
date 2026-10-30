@@ -72,6 +72,54 @@
     box-shadow: var(--bayang-fokus);
 }
 
+/* Kolom sandi dengan tombol lihat/sembunyikan di dalam kontrol. */
+.tautan__sandi {
+    position: relative;
+}
+
+.tautan__kontrol--sandi {
+    padding-right: 3.25rem;
+}
+
+.tautan__sandi .tombol-sandi {
+    position: absolute;
+    top: 50%;
+    right: var(--jarak-2);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-kontrol);
+    color: var(--warna-teks-lembut);
+    background: transparent;
+    cursor: pointer;
+    transform: translateY(-50%);
+    transition: color var(--transisi-cepat), background var(--transisi-cepat);
+}
+
+.tautan__sandi .tombol-sandi:hover {
+    color: var(--warna-smart-navy);
+    background: var(--warna-smart-biru);
+}
+
+.tautan__sandi .tombol-sandi:focus-visible {
+    outline: 2px solid var(--warna-smart-navy);
+    outline-offset: 1px;
+}
+
+.tautan__sandi .ikon-sandi {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+.tautan__sandi .tombol-sandi[aria-pressed="false"] .ikon-sandi--tutup,
+.tautan__sandi .tombol-sandi[aria-pressed="true"] .ikon-sandi--buka {
+    display: none;
+}
+
 .tautan__galat {
     margin: 0;
     color: var(--warna-bahaya);

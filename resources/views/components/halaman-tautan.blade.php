@@ -13,7 +13,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $judul }} — {{ $branding['nama'] }}</title>
     @include('partials.tokens')
-    @vite(['resources/css/publik/dasar.css', 'resources/css/publik/tautan.css'])
+    @vite(['resources/css/publik/dasar.css', 'resources/css/publik/tautan.css', 'resources/js/publik/auth.js'])
 </head>
 <body class="halaman-tautan">
 <main class="tautan">

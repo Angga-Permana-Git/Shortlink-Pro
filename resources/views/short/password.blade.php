@@ -5,7 +5,10 @@
     <form class="tautan__form" method="POST" action="{{ route('redirect.unlock', $shortUrl->slug) }}">
         @csrf
         <label class="tautan__label" for="password">{{ __('ui.tautan.label_sandi') }}</label>
-        <input class="tautan__kontrol" id="password" type="password" name="password" required autofocus autocomplete="off">
+        <div class="tautan__sandi">
+            <input class="tautan__kontrol tautan__kontrol--sandi" id="password" type="password" name="password" required autofocus autocomplete="off">
+            @include('partials.tombol-lihat-sandi', ['id' => 'password'])
+        </div>
         @error('password')
             <p class="tautan__galat" role="alert">{{ $message }}</p>
         @enderror
