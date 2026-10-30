@@ -16,6 +16,6 @@ class LinktreeClickController extends Controller
 
         $events->catatKlik($tautan, $request);
 
-        return redirect()->away($tautan->url);
+        return redirect()->away($tautan->url)->header('X-Robots-Tag', 'noindex, nofollow');
     }
 }

@@ -24,12 +24,15 @@ use App\Http\Controllers\QrCodeController;
 use App\Http\Controllers\Redirect\ShowShortUrlController;
 use App\Http\Controllers\Redirect\UnlockShortUrlController;
 use App\Http\Controllers\RegisterController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Middleware\EnsurePublicAccessAllowed;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [LoginController::class, 'show'])->middleware(EnsurePublicAccessAllowed::class);
 Route::get('/login', [LoginController::class, 'show'])->name('login');
+Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
+Route::get('/robots.txt', fn () => response()->view('robots')->header('Content-Type', 'text/plain; charset=utf-8'));
 Route::post('/shorten', [PublicShortUrlController::class, 'store'])
     ->middleware(['throttle:pembuatan-tautan', EnsurePublicAccessAllowed::class])
     ->name('shorten.public');

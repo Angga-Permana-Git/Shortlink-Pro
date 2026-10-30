@@ -3,7 +3,11 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $profile->display_name }} — {{ $branding['nama'] }}</title>
+    @include('partials.seo', [
+        'seoJudul' => $profile->display_name,
+        'seoDeskripsi' => $profile->bio ?: $profile->display_name,
+        'seoCanonical' => route('linktree.show', $profile->public_slug),
+    ])
     @include('partials.tokens')
     @vite(['resources/css/publik/dasar.css', 'resources/css/publik/linktree-publik.css'])
 </head>

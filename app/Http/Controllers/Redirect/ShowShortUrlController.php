@@ -22,17 +22,25 @@ class ShowShortUrlController extends Controller
         $shortUrl = $access->find($slug);
 
         if (! $shortUrl) {
-            return response()->view('short.not_found', [], 404);
+            return response()->view('short.not_found', [], 404)
+                ->header('X-Robots-Tag', 'noindex, nofollow');
         }
 
         $alreadyUnlocked = (bool) $request->session()->get(LinkAccessService::sessionKey($slug));
 
         $status = $access->open($shortUrl, $alreadyUnlocked, RequestContextDTO::fromRequest($request));
 
-        return match ($status) {
-            LinkAccessStatus::Ready => redirect()->away($shortUrl->destination_url),
-            LinkAccessStatus::PasswordRequired => view('short.password', ['shortUrl' => $shortUrl]),
-            default => view('short.error', ['status' => $status]),
-        };
+        if ($status === LinkAccessStatus::Ready) {
+            return redirect()->away($shortUrl->destination_url)
+                ->header('X-Robots-Tag', 'noindex, nofollow');
+        }
+
+        if ($status === LinkAccessStatus::PasswordRequired) {
+            return response()->view('short.password', ['shortUrl' => $shortUrl])
+                ->header('X-Robots-Tag', 'noindex, nofollow');
+        }
+
+        return response()->view('short.error', ['status' => $status])
+            ->header('X-Robots-Tag', 'noindex, nofollow');
     }
 }

@@ -11,6 +11,7 @@ class QrCodeController extends Controller
     {
         return response($qrCode->svgUntukSlug($slug))
             ->header('Content-Type', 'image/svg+xml; charset=utf-8')
-            ->header('Cache-Control', 'public, max-age='.config('pemendek.qr_cache_seconds'));
+            ->header('Cache-Control', 'public, max-age='.config('pemendek.qr_cache_seconds'))
+            ->header('X-Robots-Tag', 'noindex, nofollow');
     }
 }

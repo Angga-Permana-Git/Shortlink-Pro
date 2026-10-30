@@ -45,6 +45,7 @@ return [
         'berakhir' => 'Expires on',
         'tombol' => 'Shorten Link',
         'alt_qr' => 'Short link QR Code',
+        'deskripsi' => 'Shortlink Pro is a free, fast, ad-free link shortener. Create custom short links with password protection, QR codes, and a Linktree bio page.',
         'promo_label' => 'For registered users',
         'promo_judul' => 'One page for all your links',
         'promo_awal' => 'Collect your important links on one public profile page at',

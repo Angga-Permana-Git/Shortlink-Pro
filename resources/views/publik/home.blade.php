@@ -7,7 +7,11 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $branding['nama'] }} — {{ __('ui.beranda.judul') }}</title>
+    @include('partials.seo', [
+        'seoJudul' => __('ui.beranda.judul'),
+        'seoDeskripsi' => __('ui.beranda.deskripsi'),
+        'seoCanonical' => url('/'),
+    ])
     @include('partials.tokens')
     @vite(['resources/css/publik/dasar.css', 'resources/css/publik/beranda.css'])
 </head>

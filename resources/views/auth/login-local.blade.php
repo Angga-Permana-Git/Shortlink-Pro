@@ -3,7 +3,12 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ $branding['nama'] }} — {{ __('ui.auth.judul_masuk') }}</title>
+    @include('partials.seo', [
+        'seoJudul' => __('ui.auth.judul_masuk'),
+        'seoDeskripsi' => __('ui.beranda.deskripsi'),
+        'seoCanonical' => route('login.local'),
+        'seoIndex' => false,
+    ])
     @include('partials.tokens')
     @vite(['resources/css/publik/dasar.css', 'resources/css/publik/auth.css', 'resources/js/publik/auth.js'])
 </head>

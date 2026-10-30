@@ -45,6 +45,7 @@ return [
         'berakhir' => 'Berakhir pada',
         'tombol' => 'Pendekkan Tautan',
         'alt_qr' => 'QR Code tautan pendek',
+        'deskripsi' => 'Shortlink Pro adalah pemendek tautan gratis, cepat, dan tanpa iklan. Buat shortlink kustom, proteksi kata sandi, QR Code, dan halaman bio Linktree.',
         'promo_label' => 'Untuk pengguna terdaftar',
         'promo_judul' => 'Satu halaman untuk semua tautan Anda',
         'promo_awal' => 'Kumpulkan tautan penting dalam satu halaman profil publik di alamat',
