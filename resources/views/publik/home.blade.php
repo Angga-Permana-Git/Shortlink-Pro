@@ -38,8 +38,7 @@
                 <button type="submit" class="bilah-atas__tautan bilah-atas__tautan--garis bilah-atas__tombol">{{ __('ui.umum.keluar') }}</button>
             </form>
         @else
-            <a href="{{ route('login') }}" class="bilah-atas__tautan bilah-atas__tautan--garis">{{ __('ui.umum.masuk') }}</a>
-            <a href="{{ route('register') }}" class="bilah-atas__tautan bilah-atas__tautan--padat">{{ __('ui.umum.daftar_gratis') }}</a>
+            <a href="{{ route('login') }}" class="bilah-atas__tautan bilah-atas__tautan--padat">{{ __('ui.umum.masuk') }}</a>
         @endauth
     </nav>
 </header>
