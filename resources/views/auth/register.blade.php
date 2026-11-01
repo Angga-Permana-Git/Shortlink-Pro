@@ -72,7 +72,14 @@
                 @include('partials.tombol-lihat-sandi', ['id' => 'password_confirmation'])
             </div>
         </div>
-        <button class="tombol-auth" type="submit">{{ __('ui.auth.tombol_daftar') }}</button>
+        <div>
+            <label class="form-auth__setuju">
+                <input type="checkbox" name="setuju" value="1" {{ old('setuju') ? 'checked' : '' }} required>
+                <span>{{ __('ui.auth.setuju_awal') }} <a href="{{ route('legal.syarat') }}">{{ __('ui.kaki.syarat') }}</a> {{ __('ui.auth.setuju_tengah') }} <a href="{{ route('legal.privasi') }}">{{ __('ui.kaki.privasi') }}</a> {{ __('ui.auth.setuju_akhir') }}</span>
+            </label>
+            <p class="form-auth__petunjuk">{{ __('ui.auth.setuju_wajib') }}</p>
+        </div>
+        <button class="tombol-auth" type="submit" disabled>{{ __('ui.auth.tombol_daftar') }}</button>
     </form>
 
     <div class="kartu-auth__kaki">

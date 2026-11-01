@@ -7,7 +7,7 @@ use Illuminate\View\View;
 
 /**
  * Menyiapkan data branding untuk tampilan publik, halaman masuk, dan halaman
- * profil Linktree.
+ * profil Bio.
  *
  * Tampilan hanya menerima data siap pakai; tidak ada tampilan yang membaca
  * database sendiri (disiplin_struktur.md bagian 1).

@@ -12,7 +12,7 @@ Dokumen ini adalah sumber kebenaran untuk **apa** yang dibangun dan **untuk siap
 Shortlink Pro adalah layanan pemendek tautan internal yang dipasang di jaringan perusahaan. Tujuan utamanya:
 
 1. **Memendekkan tautan** yang panjang menjadi tautan pendek yang mudah dibagikan, dengan pilihan slug kustom, masa berlaku, dan kata sandi.
-2. **Memberi satu halaman tautan (Linktree)** untuk setiap pengguna, agar beberapa tautan penting bisa dibagikan lewat satu alamat publik.
+2. **Memberi satu halaman tautan (Bio)** untuk setiap pengguna, agar beberapa tautan penting bisa dibagikan lewat satu alamat publik.
 3. **Menyediakan jejak** yang bisa diaudit: klik tautan, riwayat percobaan masuk, dan riwayat perubahan data penting.
 4. **Menyediakan pengaturan terpusat** untuk branding aplikasi dan mode akses publik, tanpa menyentuh kode atau berkas `.env`.
 
@@ -22,8 +22,8 @@ Non-goal ada di bagian 8.
 
 | Peran | Cara masuk | Yang bisa dilakukan |
 |---|---|---|
-| Tamu | tanpa akun | memendekkan tautan dari beranda, membuka tautan pendek, membuka halaman Linktree publik |
-| Pengguna (`role = user`) | `/login/local` atau Keycloak | semua hak tamu, ditambah panel `/user`: membuat/mengubah/menghapus tautan miliknya dan mengatur halaman Linktree (nama, keterangan, alamat publik, logo profil) |
+| Tamu | tanpa akun | memendekkan tautan dari beranda, membuka tautan pendek, membuka halaman Bio publik |
+| Pengguna (`role = user`) | `/login/local` atau Keycloak | semua hak tamu, ditambah panel `/user`: membuat/mengubah/menghapus tautan miliknya dan mengatur halaman Bio (nama, keterangan, alamat publik, logo profil) |
 | Admin (`role = admin`) | `/login/local` atau Keycloak | semua hak pengguna, ditambah panel `/admin`: seluruh tautan, pengguna, jejak audit/klik/login, branding, dan zona waktu |
 
 Peran disimpan di kolom `users.role` dan hanya boleh diubah oleh Admin; setiap perubahan peran dicatat di `role_change_logs`.
@@ -37,7 +37,7 @@ Peran disimpan di kolom `users.role` dan hanya boleh diubah oleh Admin; setiap p
 - Endpoint `POST /shorten`, dibatasi `throttle:10,1` (10 permintaan per menit per IP).
 - Permintaan JSON menerima `201` berisi `data.slug`, `data.url`, `data.qr`, `data.protected`, `data.expires_at`.
 - Permintaan biasa (form) kembali ke beranda dan **hasilnya tampil di bagian bawah formulir**.
-- Halaman ini **tidak menawarkan Linktree**: tamu hanya menerima tautan pendek beserta QR-nya. Pembuatan dan pengaturan Linktree ada di panel pengguna setelah masuk.
+- Halaman ini **tidak menawarkan Bio**: tamu hanya menerima tautan pendek beserta QR-nya. Pembuatan dan pengaturan Bio ada di panel pengguna setelah masuk.
 - Saat `force_sso` aktif, tamu diarahkan ke Keycloak lebih dulu (middleware `EnsurePublicAccessAllowed`).
 
 ### 3.2 Membuka tautan pendek (`GET /{slug}`, `POST /{slug}`)
@@ -53,9 +53,9 @@ Urutan pemeriksaan pada `LinkAccessService`:
 
 Batas percobaan kata sandi: 5 kali per tautan, terkunci 60 detik. Setiap percobaan dicatat sebagai `click_events` (status `protected` atau `wrong_password`), dan setiap redirect menambah `total_clicks` serta `last_clicked_at`. IP disimpan sebagai hash (`sha256(ip + APP_KEY)`), bukan teks asli.
 
-### 3.3 Halaman Linktree publik (`/u/{alamat}`)
+### 3.3 Halaman Bio publik (`/u/{alamat}`)
 
-- Alamat publik adalah **slug pilihan pemiliknya** (`linktree_profiles.public_slug`), bukan username login: hanya huruf kecil, angka, dan tanda hubung, serta unik antar pengguna.
+- Alamat publik adalah **slug pilihan pemiliknya** (`bio_profiles.public_slug`), bukan username login: hanya huruf kecil, angka, dan tanda hubung, serta unik antar pengguna.
 - Hanya menampilkan profil yang **diterbitkan** (`is_active = true`) dan **hanya tautan aktif**, berurutan sesuai `sort_order`.
 - Profil atau alamat yang tidak ada, alamat yang belum diisi, atau profil yang tidak diterbitkan, menghasilkan 404.
 - Yang tampil hanya **logo, nama tampilan, dan keterangan**; nama login tidak ditampilkan ke pengunjung.
@@ -67,15 +67,15 @@ Batas percobaan kata sandi: 5 kali per tautan, terkunci 60 detik. Setiap percoba
 - Panel pengguna berupa **satu lembar** berisi empat kartu berurutan, tanpa sidebar: pengguna tidak berpindah halaman, seluruh alur berjalan dari kartu 01 ke kartu 04.
   1. **Dashboard** — angka ringkas tautan milik pengguna (total, aktif, total klik, dilindungi sandi).
   2. **Pemendek Tautan** — pembuatan tautan pendek; hasilnya tampil beserta salin, QR, dan pintasan ke kartu Link Saya.
-  3. **Link Saya** — daftar tautan dengan aksi salin, QR, sunting, dan hapus, sekaligus centang tautan yang tampil di halaman Linktree dan status terbit halaman itu. Kartu ini bisa dilipat agar lembar tetap ringkas.
-  4. **Profil Linktree** — logo, nama tampilan, keterangan, dan alamat publik, beserta pratinjau halaman publik. Hanya bagian identitas yang bisa dilipat; pratinjaunya selalu tampil.
+  3. **Link Saya** — daftar tautan dengan aksi salin, QR, sunting, dan hapus, sekaligus centang tautan yang tampil di halaman Bio dan status terbit halaman itu. Kartu ini bisa dilipat agar lembar tetap ringkas.
+  4. **Profil Bio** — logo, nama tampilan, keterangan, dan alamat publik, beserta pratinjau halaman publik. Hanya bagian identitas yang bisa dilipat; pratinjaunya selalu tampil.
 - Menekan **QR** pada satu baris membuka panel QR tautan itu (`GET /qr/{slug}`, SVG) beserta tombol unduh; panelnya ditutup lewat tombol Tutup atau saat baris itu disunting/dihapus.
-- **Alamat publik wajib diisi** di kartu Profil Linktree (`public_slug`); mengubahnya membuat alamat lama tidak lagi bisa dibuka.
+- **Alamat publik wajib diisi** di kartu Profil Bio (`public_slug`); mengubahnya membuat alamat lama tidak lagi bisa dibuka.
 - Slug kustom menerima tempelan URL penuh (bagian terakhir path yang dipakai).
 - Perubahan tautan mencakup tautan panjang, aktif/nonaktif, waktu kedaluwarsa, dan kata sandi (isi untuk mengganti, matikan proteksi untuk melepasnya). **Slug tidak diubah**, karena alamat pendek beserta QR yang sudah dibagikan akan mati bila slug berubah.
-- **Penghapusan tautan milik sendiri** tersedia di kartu Link Saya; tautan yang dihapus sekaligus dilepas dari pilihan Linktree. Admin tetap bisa menghapus tautan siapa pun dari panel admin.
-- Logo profil disimpan di disk `public` (`linktree/{user_id}/`) dan ditampilkan di halaman publik. Pengguna bisa menghapus logo itu kapan saja.
-- Halaman `/user/short-urls` dan `/user/linktree-settings` masih ada dan bisa dibuka langsung, tetapi tidak lagi ditautkan dari lembar `/user`.
+- **Penghapusan tautan milik sendiri** tersedia di kartu Link Saya; tautan yang dihapus sekaligus dilepas dari pilihan Bio. Admin tetap bisa menghapus tautan siapa pun dari panel admin.
+- Logo profil disimpan di disk `public` (`bio/{user_id}/`) dan ditampilkan di halaman publik. Pengguna bisa menghapus logo itu kapan saja.
+- Halaman `/user/short-urls` dan `/user/bio-settings` masih ada dan bisa dibuka langsung, tetapi tidak lagi ditautkan dari lembar `/user`.
 - Pengguna hanya bisa melihat dan mengubah tautan miliknya (kueri resource dibatasi `owner_id`; `ShortUrlPolicy` memeriksa kepemilikan dan mengizinkan pemilik menghapus tautannya sendiri).
 
 ### 3.5 Panel admin (`/admin`)
@@ -117,8 +117,8 @@ Batas percobaan kata sandi: 5 kali per tautan, terkunci 60 detik. Setiap percoba
 | Metode | Alamat | Akses | Keterangan |
 |---|---|---|---|
 | POST | `/api/v1/links` | publik (`throttle:10,1`) | membuat tautan pendek; `201` berisi `data.slug` dan `data.url` |
-| GET | `/api/v1/linktree` | perlu login | profil Linktree milik pemanggil beserta tautannya |
-| PUT | `/api/v1/linktree` | perlu login | mengubah `display_name`, `bio`, `public_slug`, dan/atau `is_active` (kolom yang tidak dikirim tidak diubah) |
+| GET | `/api/v1/bio` | perlu login | profil Bio milik pemanggil beserta tautannya |
+| PUT | `/api/v1/bio` | perlu login | mengubah `display_name`, `bio`, `public_slug`, dan/atau `is_active` (kolom yang tidak dikirim tidak diubah) |
 
 ### 3.8 Kode QR
 
@@ -150,9 +150,9 @@ Setiap keputusan di bawah ini mengikat; perubahan harus melalui pengguna lebih d
    - `force_sso` aktif → tamu diarahkan ke Keycloak sebelum bisa membuka halaman publik; halaman masuk menampilkan tombol "Login dengan SSO".
    - `force_sso` nonaktif → beranda publik terbuka dan bisa dipakai tanpa akun; halaman masuk mengarah ke formulir login lokal.
 2. **Tamu boleh memendekkan tautan tanpa akun.** Hasil pemendekan selalu muncul **di bawah** formulir, bukan di halaman terpisah.
-3. **Kartu promosi Linktree di beranda tidak memuat tombol masuk.** Tombol "Lanjutkan dengan Keycloak" hanya muncul saat `force_sso` aktif.
+3. **Kartu promosi Bio di beranda tidak memuat tombol masuk.** Tombol "Lanjutkan dengan Keycloak" hanya muncul saat `force_sso` aktif.
 4. **Warna beranda dipertahankan.** Perubahan tampilan tidak boleh mengganti palet yang sudah dipakai; nilai desain diambil dari token.
-5. **Linktree adalah fasilitas pengguna yang sudah masuk.** Membuat dan mengatur Linktree hanya bisa dari panel pengguna (`/user` atau `/user/linktree-settings`) setelah login. Alur pemendekan tautan di halaman awal (`/`) tidak menawarkan Linktree: tamu hanya mendapat tautan pendek dan QR-nya. Halaman Linktree publik `/u/{alamat}` tetap bisa dibuka tanpa akun, dan alamatnya dipilih sendiri oleh pemiliknya bukan dari username login. Kartu promosi di beranda hanya menjelaskan fasilitas ini untuk pengguna terdaftar, tanpa tombol masuk.
+5. **Bio adalah fasilitas pengguna yang sudah masuk.** Membuat dan mengatur Bio hanya bisa dari panel pengguna (`/user` atau `/user/bio-settings`) setelah login. Alur pemendekan tautan di halaman awal (`/`) tidak menawarkan Bio: tamu hanya mendapat tautan pendek dan QR-nya. Halaman Bio publik `/u/{alamat}` tetap bisa dibuka tanpa akun, dan alamatnya dipilih sendiri oleh pemiliknya bukan dari username login. Kartu promosi di beranda hanya menjelaskan fasilitas ini untuk pengguna terdaftar, tanpa tombol masuk.
 6. **Login lokal adalah jalur darurat.** Hanya akun `auth_provider = local` yang boleh memakainya, sehingga akun SSO tidak bisa dilewati.
 7. **Kata sandi tidak pernah disimpan atau ditampilkan apa adanya.** Kata sandi pengguna dan kata sandi tautan selalu di-hash (Laravel `Hash`).
 8. **Semua perubahan penting meninggalkan jejak**: `audit_logs` (perubahan data), `click_events` (klik tautan), `login_audit_logs` (percobaan masuk), `role_change_logs` (perubahan peran).
@@ -217,7 +217,7 @@ Pemeriksaan tambahan sesuai jenis perubahan:
 # Daftar rute (memastikan rute terbaca setelah perubahan controller)
 C:\xampp\php\php.exe artisan route:list --except-vendor
 
-# Uji nyata dengan server berjalan (beranda, halaman Linktree publik, API)
+# Uji nyata dengan server berjalan (beranda, halaman Bio publik, API)
 C:\xampp\php\php.exe artisan serve
 Invoke-WebRequest -Uri http://127.0.0.1:8000/ -UseBasicParsing | Select-Object StatusCode
 Invoke-WebRequest -Uri http://127.0.0.1:8000/u/user -UseBasicParsing | Select-Object StatusCode

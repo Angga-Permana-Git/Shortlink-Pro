@@ -114,8 +114,8 @@ trait MengelolaTautan
             $this->idQr = null;
         }
 
-        // Tautan yang hilang tidak boleh tertinggal sebagai pilihan Linktree.
-        $this->pilihanLinktree = array_values(array_diff($this->pilihanLinktree, [$idTautan]));
+        // Tautan yang hilang tidak boleh tertinggal sebagai pilihan Bio.
+        $this->pilihanBio = array_values(array_diff($this->pilihanBio, [$idTautan]));
         $this->pesanTautan = __('ui.panel.tautan_dihapus');
     }
 }

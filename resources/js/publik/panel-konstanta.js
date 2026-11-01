@@ -9,7 +9,7 @@ export const SELEKTOR = {
     panelFitur: '[data-panel]',
     tombolSalin: '[data-salin]',
     labelSalin: '[data-hook="label-salin"]',
-    kartuLinktree: '[data-hook="kartu-linktree"]',
+    kartuBio: '[data-hook="kartu-bio"]',
 };
 
 export const ACARA = {

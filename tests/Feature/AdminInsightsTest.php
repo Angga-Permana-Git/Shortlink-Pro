@@ -14,7 +14,7 @@ use App\Filament\Widgets\RecentActivityTable;
 use App\Filament\Widgets\StatsOverview;
 use App\Filament\Widgets\SystemStatusWidget;
 use App\Models\ClickEvent;
-use App\Models\LinktreeProfile;
+use App\Models\BioProfile;
 use App\Models\LoginAuditLog;
 use App\Models\ShortUrl;
 use App\Models\User;
@@ -65,7 +65,7 @@ class AdminInsightsTest extends TestCase
             'ip_address' => '127.0.0.1',
             'created_at' => now(),
         ]);
-        LinktreeProfile::create([
+        BioProfile::create([
             'user_id' => $baru->id,
             'display_name' => 'Tanpa Alamat',
             'is_active' => true,
@@ -95,7 +95,7 @@ class AdminInsightsTest extends TestCase
         $this->assertContains('Pengguna baru belum membuat tautan', $judul);
         $this->assertContains('Pengguna nonaktif punya tautan aktif', $judul);
         $this->assertContains('Login gagal berulang', $judul);
-        $this->assertContains('Profil Linktree tanpa alamat', $judul);
+        $this->assertContains('Profil Link in Bio tanpa alamat', $judul);
         $this->assertContains('Tautan dengan klik gagal', $judul);
     }
 

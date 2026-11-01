@@ -26,7 +26,7 @@
         'resources/css/publik/dasar.css',
         'resources/css/publik/beranda.css',
         'resources/css/publik/panel.css',
-        'resources/css/publik/linktree-publik.css',
+        'resources/css/publik/bio-publik.css',
     ])
 </head>
 <body class="halaman-beranda">

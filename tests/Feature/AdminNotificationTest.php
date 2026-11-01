@@ -4,7 +4,7 @@ namespace Tests\Feature;
 
 use App\Filament\Widgets\AdminAttentionWidget;
 use App\Models\ClickEvent;
-use App\Models\LinktreeProfile;
+use App\Models\BioProfile;
 use App\Models\ShortUrl;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -22,7 +22,7 @@ class AdminNotificationTest extends TestCase
         $admin = User::factory()->create(['role' => 'admin', 'is_active' => true]);
         $pemilik = User::factory()->create(['role' => 'user', 'is_active' => true]);
 
-        LinktreeProfile::create([
+        BioProfile::create([
             'user_id' => $pemilik->id,
             'display_name' => 'Tanpa Alamat',
             'is_active' => true,
@@ -44,7 +44,7 @@ class AdminNotificationTest extends TestCase
         Livewire::actingAs($admin)
             ->test(AdminAttentionWidget::class)
             ->assertSee('Perlu Perhatian')
-            ->assertSee('Profil Linktree tanpa alamat')
+            ->assertSee('Profil Link in Bio tanpa alamat')
             ->assertSee('Tautan segera kedaluwarsa')
             ->assertSee('Percobaan kata sandi salah');
     }
@@ -55,7 +55,7 @@ class AdminNotificationTest extends TestCase
         $admin = User::factory()->create(['role' => 'admin', 'is_active' => true]);
         $pemilik = User::factory()->create(['role' => 'user', 'is_active' => true]);
 
-        LinktreeProfile::create([
+        BioProfile::create([
             'user_id' => $pemilik->id,
             'display_name' => 'Tanpa Alamat',
             'is_active' => true,

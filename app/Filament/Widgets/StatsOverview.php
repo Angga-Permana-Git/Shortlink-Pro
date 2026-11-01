@@ -51,7 +51,7 @@ class StatsOverview extends StatsOverviewWidget
                 ->description($this->delta($ringkasan['klik_periode'], $ringkasan['klik_sebelum']))
                 ->icon('heroicon-o-chart-bar')
                 ->color('warning'),
-            Stat::make(__('Linktree Terbit'), $ringkasan['linktree_terbit'])
+            Stat::make(__('Link in Bio Terbit'), $ringkasan['bio_terbit'])
                 ->description(__('Profil dengan alamat publik'))
                 ->icon('heroicon-o-globe-alt')
                 ->color('info'),

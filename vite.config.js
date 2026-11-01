@@ -11,7 +11,7 @@ export default defineConfig({
                 'resources/css/publik/dasar.css',
                 'resources/css/publik/beranda.css',
                 'resources/css/publik/auth.css',
-                'resources/css/publik/linktree-publik.css',
+                'resources/css/publik/bio-publik.css',
                 'resources/css/publik/tautan.css',
                 'resources/css/publik/panel.css',
                 'resources/js/publik/beranda.js',

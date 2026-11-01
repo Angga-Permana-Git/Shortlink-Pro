@@ -31,7 +31,8 @@ class AppServiceProvider extends ServiceProvider
      */
     private const TAMPILAN_BERBRANDING = [
         'publik.home',
-        'publik.linktree',
+        'publik.bio',
+        'publik.legal',
         'auth.login',
         'auth.login-local',
         'auth.register',

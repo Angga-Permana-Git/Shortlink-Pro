@@ -2,13 +2,13 @@
 
 namespace Tests\Feature;
 
-use App\Dto\LinktreeLinkDTO;
+use App\Dto\BioLinkDTO;
 use App\Filament\User\Pages\UserDashboard;
 use App\Models\ClickEvent;
 use App\Models\ShortUrl;
 use App\Models\User;
 use App\Services\Dashboard\UserDashboardService;
-use App\Services\Linktree\LinktreeService;
+use App\Services\Bio\BioService;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -39,11 +39,11 @@ class UserDashboardTest extends TestCase
             'kartu__judul">Dashboard',
             'kartu__judul">Pemendek Tautan',
             'kartu__judul">Link Saya',
-            'kartu__judul">Profil Linktree',
+            'kartu__judul">Profil Link in Bio',
         ], false);
 
         $response->assertDontSee('/user/short-urls');
-        $response->assertDontSee('/user/linktree-settings');
+        $response->assertDontSee('/user/bio-settings');
     }
 
     public function test_user_can_shorten_link_from_dashboard(): void
@@ -67,7 +67,7 @@ class UserDashboardTest extends TestCase
         $this->assertStringContainsString('data-salin="hasil-tautan"', $halaman->html());
         $this->assertStringContainsString(route('qr.show', $tautan->slug), $halaman->html());
         $this->assertStringContainsString('download="qr-'.$tautan->slug.'.svg"', $halaman->html());
-        $this->assertStringContainsString('href="#kartu-linktree"', $halaman->html());
+        $this->assertStringContainsString('href="#kartu-bio"', $halaman->html());
 
         $this->assertDatabaseHas('audit_logs', [
             'actor_id' => $user->id,
@@ -172,12 +172,12 @@ class UserDashboardTest extends TestCase
 
         $halaman = Livewire::actingAs($user)
             ->test(UserDashboard::class)
-            ->set('pilihanLinktree', [$tautan->id])
+            ->set('pilihanBio', [$tautan->id])
             ->call('hapusTautan', $tautan->id)
             ->assertHasNoErrors();
 
         $this->assertSoftDeleted('short_urls', ['id' => $tautan->id]);
-        $this->assertSame([], $halaman->get('pilihanLinktree'));
+        $this->assertSame([], $halaman->get('pilihanBio'));
         $this->assertStringContainsString('Tautan dihapus.', $halaman->html());
 
         $this->assertDatabaseHas('audit_logs', [
@@ -199,7 +199,7 @@ class UserDashboardTest extends TestCase
             ->call('hapusTautan', $asing->id);
     }
 
-    public function test_user_can_choose_which_links_appear_on_linktree(): void
+    public function test_user_can_choose_which_links_appear_on_bio(): void
     {
         $user = $this->user();
         $dipilih = ShortUrl::factory()->create(['owner_id' => $user->id]);
@@ -207,12 +207,12 @@ class UserDashboardTest extends TestCase
 
         Livewire::actingAs($user)
             ->test(UserDashboard::class)
-            ->set('pilihanLinktree', [$dipilih->id])
+            ->set('pilihanBio', [$dipilih->id])
             ->set('terbitkan', true)
-            ->call('simpanLinktree')
+            ->call('simpanBio')
             ->assertHasNoErrors();
 
-        $profil = app(LinktreeService::class)->profile($user);
+        $profil = app(BioService::class)->profile($user);
         $tautan = $profil->links()->get();
 
         $this->assertSame([$dipilih->shortUrl()], $tautan->pluck('url')->all());
@@ -228,13 +228,13 @@ class UserDashboardTest extends TestCase
 
         Livewire::actingAs($user)
             ->test(UserDashboard::class)
-            ->set('pilihanLinktree', [$asing->id])
-            ->call('simpanLinktree');
+            ->set('pilihanBio', [$asing->id])
+            ->call('simpanBio');
 
-        $this->assertSame(0, app(LinktreeService::class)->profile($user)->links()->count());
+        $this->assertSame(0, app(BioService::class)->profile($user)->links()->count());
     }
 
-    public function test_user_can_save_linktree_profile_identity(): void
+    public function test_user_can_save_bio_profile_identity(): void
     {
         $user = $this->user(['username' => 'penulis']);
 
@@ -246,7 +246,7 @@ class UserDashboardTest extends TestCase
             ->call('simpanProfil')
             ->assertHasNoErrors();
 
-        $this->assertDatabaseHas('linktree_profiles', [
+        $this->assertDatabaseHas('bio_profiles', [
             'user_id' => $user->id,
             'display_name' => 'Penulis Demo',
             'bio' => 'Berbagi tautan pilihan.',
@@ -254,7 +254,7 @@ class UserDashboardTest extends TestCase
         ]);
 
         $this->assertStringContainsString('Penulis Demo', $halaman->html());
-        $this->assertStringContainsString('Profil Linktree tersimpan.', $halaman->html());
+        $this->assertStringContainsString('Profil Link in Bio tersimpan.', $halaman->html());
     }
 
     /**
@@ -271,8 +271,8 @@ class UserDashboardTest extends TestCase
             ->call('simpanProfil')
             ->assertHasNoErrors();
 
-        $this->get(route('linktree.show', 'tautan-penulis'))->assertOk();
-        $this->get(route('linktree.show', 'penulis'))->assertNotFound();
+        $this->get(route('bio.show', 'tautan-penulis'))->assertOk();
+        $this->get(route('bio.show', 'penulis'))->assertNotFound();
     }
 
     public function test_public_address_rejects_uppercase_and_duplicate_of_another_user(): void
@@ -320,7 +320,7 @@ class UserDashboardTest extends TestCase
             ->call('simpanProfil')
             ->assertHasNoErrors();
 
-        $profil = app(LinktreeService::class)->profile($user);
+        $profil = app(BioService::class)->profile($user);
         $path = $profil->avatar_path;
 
         $this->assertNotNull($path);
@@ -328,10 +328,10 @@ class UserDashboardTest extends TestCase
 
         $this->assertDatabaseHas('audit_logs', [
             'actor_id' => $user->id,
-            'action' => 'linktree.avatar_upload',
+            'action' => 'bio.avatar_upload',
         ]);
 
-        $this->get(route('linktree.show', 'penulis'))
+        $this->get(route('bio.show', 'penulis'))
             ->assertOk()
             ->assertSee('profil__lambang-gambar');
 
@@ -343,7 +343,7 @@ class UserDashboardTest extends TestCase
         Storage::disk('public')->assertMissing($path);
         $this->assertNull($profil->refresh()->avatar_path);
 
-        $this->get(route('linktree.show', 'penulis'))
+        $this->get(route('bio.show', 'penulis'))
             ->assertOk()
             ->assertDontSee('profil__lambang-gambar');
     }
@@ -364,12 +364,12 @@ class UserDashboardTest extends TestCase
     {
         $user = $this->user(['username' => 'penulis']);
 
-        app(LinktreeService::class)->profile($user)->update(['public_slug' => 'tautan-penulis']);
+        app(BioService::class)->profile($user)->update(['public_slug' => 'tautan-penulis']);
 
         $this->actingAs($user)
             ->get('/user')
             ->assertOk()
-            ->assertSee(route('linktree.show', 'tautan-penulis'));
+            ->assertSee(route('bio.show', 'tautan-penulis'));
     }
 
     /**
@@ -380,7 +380,7 @@ class UserDashboardTest extends TestCase
     {
         $user = $this->user(['username' => 'penulis', 'name' => 'Penulis Demo']);
 
-        app(LinktreeService::class)->profile($user)->update(['public_slug' => 'tautan-penulis']);
+        app(BioService::class)->profile($user)->update(['public_slug' => 'tautan-penulis']);
 
         $html = $this->actingAs($user)->get('/user')->assertOk()->getContent();
 
@@ -399,15 +399,15 @@ class UserDashboardTest extends TestCase
         }
 
         $this->assertStringContainsString('wire:submit="buatTautan"', $html);
-        $this->assertStringContainsString('wire:submit="simpanLinktree"', $html);
+        $this->assertStringContainsString('wire:submit="simpanBio"', $html);
         $this->assertStringContainsString('wire:submit="simpanProfil"', $html);
 
         // Kartu 3 menjadi tujuan gulir setelah tautan dibuat.
-        $this->assertStringContainsString('data-hook="kartu-linktree"', $html);
+        $this->assertStringContainsString('data-hook="kartu-bio"', $html);
 
         // Kartu 3 dan bagian identitas kartu 4 bisa dilipat lewat aksi Livewire.
         $this->assertStringContainsString('id="isi-link-saya"', $html);
-        $this->assertStringContainsString('id="isi-profil-linktree"', $html);
+        $this->assertStringContainsString('id="isi-profil-bio"', $html);
         $this->assertStringContainsString('wire:click="lipatTautan"', $html);
         $this->assertStringContainsString('wire:click="lipatProfil"', $html);
 
@@ -425,7 +425,7 @@ class UserDashboardTest extends TestCase
         // Isi yang dilipat disembunyikan dengan atribut hidden, bukan dihapus dari DOM.
         $isi = $halaman->html();
         $this->assertMatchesRegularExpression('/id="isi-link-saya"\s+hidden/', $isi);
-        $this->assertMatchesRegularExpression('/id="isi-profil-linktree"\s+hidden/', $isi);
+        $this->assertMatchesRegularExpression('/id="isi-profil-bio"\s+hidden/', $isi);
 
         $halaman->call('lipatTautan')->assertSet('bukaTautan', true);
 
@@ -437,9 +437,9 @@ class UserDashboardTest extends TestCase
         $user = $this->user();
         $tautan = ShortUrl::factory()->create(['owner_id' => $user->id]);
 
-        $linktree = app(LinktreeService::class);
-        $linktree->syncLinks($linktree->profile($user), [
-            new LinktreeLinkDTO($tautan->slug, $tautan->shortUrl()),
+        $bio = app(BioService::class);
+        $bio->syncLinks($bio->profile($user), [
+            new BioLinkDTO($tautan->slug, $tautan->shortUrl()),
         ]);
 
         $html = $this->actingAs($user)->get('/user')->assertOk()->getContent();
@@ -454,7 +454,7 @@ class UserDashboardTest extends TestCase
         $this->assertStringContainsString('wire:confirm=', $html);
 
         // Baris memuat tanda keadaan tautan.
-        $this->assertStringContainsString('Di Linktree', $html);
+        $this->assertStringContainsString('Di Link in Bio', $html);
     }
 
     public function test_user_can_open_qr_of_own_link(): void

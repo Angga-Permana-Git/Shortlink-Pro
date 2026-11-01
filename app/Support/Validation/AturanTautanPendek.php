@@ -2,6 +2,7 @@
 
 namespace App\Support\Validation;
 
+use App\Http\Controllers\LegalController;
 use App\Services\Setting\OperationalSettingsService;
 use Closure;
 
@@ -51,7 +52,7 @@ final class AturanTautanPendek
                         return;
                     }
 
-                    $dicadangkan = app(OperationalSettingsService::class)->reservedSlugs();
+                    $dicadangkan = LegalController::slugDicadangkan(app(OperationalSettingsService::class));
 
                     if (in_array(mb_strtolower($value), $dicadangkan, true)) {
                         $fail('Nama pendek "'.$value.'" dicadangkan oleh admin.');

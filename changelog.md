@@ -287,14 +287,14 @@ Diperbaiki
 - Filter status pada daftar tautan membandingkan teks Indonesia; kini memakai kode status (`active`, `inactive`, `expired`, `scheduled`, `protected`, `forever`) agar tetap benar di kedua bahasa.
 
 Diubah
-- Seluruh teks panel pengguna dialihkan ke `__('ui.panel.*')`: dashboard (statistik, tren, zona waktu), kesehatan tautan, aktivitas klik, statistik Linktree, kartu pemendek, daftar tautan, baris tautan, sunting tautan, QR, profil Linktree, pengaturan Linktree, banner impersonasi, serta notifikasi aksi.
+- Seluruh teks panel pengguna dialihkan ke `__('ui.panel.*')`: dashboard (statistik, tren, zona waktu), kesehatan tautan, aktivitas klik, statistik Bio, kartu pemendek, daftar tautan, baris tautan, sunting tautan, QR, profil Bio, pengaturan Bio, banner impersonasi, serta notifikasi aksi.
 - `UserDaftarTautanService` menambah kunci `status` berupa kode; `UserAktivitasService` menambah `status` per rincian kualitas klik; `UserKesehatanService` memakai kunci terjemahan untuk judul dan pesan.
 - `ShortUrlResource`, halaman Create/Edit/View, dan widget `MyLinksOverview` memakai label terjemahan.
 - `lang/id/ui.php` dan `lang/en/ui.php` dilengkapi kunci panel yang sebelumnya belum ada (status, placeholder alamat publik, tooltip salin, dan lain-lain).
 - `tests/Feature/PanelBahasaTest.php` baru: memastikan panel berbahasa Inggris untuk akun `locale=en` dan berbahasa Indonesia untuk `locale=id`.
 - Uji sementara `tests/Feature/TmpLocalePanelTest.php` dihapus.
 
-**Berkas:** `app/Filament/User/Resources/ShortUrlResource.php`, `app/Filament/User/Resources/ShortUrlResource/Pages/{Create,Edit,View}ShortUrl.php`, `app/Filament/User/Widgets/MyLinksOverview.php`, `app/Filament/User/Pages/LinktreeSettings.php`, `app/Filament/User/Pages/Concerns/{MengelolaTautan,MengelolaLinktree,MengelolaZonaWaktu}.php`, `app/Services/Dashboard/{UserDaftarTautanService,UserKesehatanService,UserAktivitasService}.php`, `resources/views/filament/user/**`, `lang/{id,en}/ui.php`, `tests/Feature/PanelBahasaTest.php`
+**Berkas:** `app/Filament/User/Resources/ShortUrlResource.php`, `app/Filament/User/Resources/ShortUrlResource/Pages/{Create,Edit,View}ShortUrl.php`, `app/Filament/User/Widgets/MyLinksOverview.php`, `app/Filament/User/Pages/BioSettings.php`, `app/Filament/User/Pages/Concerns/{MengelolaTautan,MengelolaBio,MengelolaZonaWaktu}.php`, `app/Services/Dashboard/{UserDaftarTautanService,UserKesehatanService,UserAktivitasService}.php`, `resources/views/filament/user/**`, `lang/{id,en}/ui.php`, `tests/Feature/PanelBahasaTest.php`
 **Verifikasi:** `pint` passed; `artisan test` 218 passed (863 assertions), termasuk `PanelBahasaTest`.
 
 ---
@@ -350,7 +350,7 @@ Ditambahkan
 - `.env.example`: `APP_SEED=false`, `SESSION_SECURE_COOKIE=false`, `SESSION_SAME_SITE=lax`.
 
 Diubah
-- `README.md` ditulis ulang: fitur terkini (publik + terkelola, Linktree, Safe Browsing, QR, API v1, impor CSV, 2FA, SSO), kebutuhan PHP 8.2.35+, instalasi lokal, konfigurasi, keamanan, deployment Docker/nginx/Cloudflare, pengujian, dan daftar dokumentasi.
+- `README.md` ditulis ulang: fitur terkini (publik + terkelola, Bio, Safe Browsing, QR, API v1, impor CSV, 2FA, SSO), kebutuhan PHP 8.2.35+, instalasi lokal, konfigurasi, keamanan, deployment Docker/nginx/Cloudflare, pengujian, dan daftar dokumentasi.
 - `composer.json`: nama paket `angga-permana/shortlink-pro` dan deskripsi proyek menggantikan placeholder Laravel.
 
 **Berkas:** `.gitignore`, `.env.example`, `composer.json`, `LICENSE`, `README.md`
@@ -465,7 +465,7 @@ Diubah
 - Nilai `auth_provider=local` pada detail pengguna ikut diterjemahkan menjadi `Local`/`Lokal`.
 
 **Berkas:** `lang/en.json`, `app/Filament/Concerns/BahasaSumberDaya.php`, `app/Filament/Admin/Resources/**`, `app/Filament/Admin/Pages/{BrandingSettings,ImportShortUrls,OperationalSettings,SecuritySettings}.php`, `app/Filament/Admin/Resources/ShortUrlResource/RelationManagers/ClickEventsRelationManager.php`, `resources/views/filament/{admin,widgets}/**`, `tests/Feature/BahasaTest.php`
-**Verifikasi:** `php artisan test` 205 passed (813 assertions); `pint --test` lulus; `npm run build` lulus (70 modul); uji Playwright memastikan dashboard, pengguna, tautan, log, Linktree, pengaturan, impor, keamanan, dan branding tampil dalam bahasa Inggris.
+**Verifikasi:** `php artisan test` 205 passed (813 assertions); `pint --test` lulus; `npm run build` lulus (70 modul); uji Playwright memastikan dashboard, pengguna, tautan, log, Bio, pengaturan, impor, keamanan, dan branding tampil dalam bahasa Inggris.
 
 ---
 
@@ -486,15 +486,15 @@ Diubah
 **Berkas:** `resources/views/partials/pemilih-bahasa-filament.blade.php`, `app/Http/Controllers/LocaleController.php`, `app/Providers/Filament/{AdminPanelProvider,UserPanelProvider}.php`, `app/Filament/Widgets/AdminAttentionWidget.php`, `resources/views/filament/widgets/admin-attention.blade.php`, `app/Filament/Widgets/{StatsOverview,AdminGrowthChart,AdminForeignLinksTable,ActiveUsersTable,ClickHeatmapWidget}.php`, `resources/views/filament/widgets/click-heatmap.blade.php`, `resources/views/filament/components/server-clock.blade.php`, `app/Filament/User/Pages/UserDashboard.php`, `tests/Feature/BahasaTest.php`, `tests/Feature/AdminShortUrlToolsTest.php`
 **Verifikasi:** `php artisan test` 205 passed (806 assertions); `pint --test` lulus; `npm run build` lulus (70 modul).
 
-[2026-10-22] Dashboard insight pengguna/admin, pelacakan Linktree, dan filter operasional
+[2026-10-22] Dashboard insight pengguna/admin, pelacakan Bio, dan filter operasional
 
 Ditambahkan
 - Dashboard pengguna kini punya pemilih periode 7/30/90 hari, tren klik dengan pembanding periode sebelumnya (total, rata-rata/hari, hari terbaik, delta), sumber klik teratas, jam dan hari tersibuk, kualitas klik berhasil/gagal, serta lima klik terbaru.
-- Panel kesehatan tautan pengguna: kedaluwarsa ≤7 hari, sudah kedaluwarsa, terjadwal, belum pernah diklik, tautan aktif tanpa klik, klik gagal, dan Linktree terbit tanpa tautan/alamat. Setiap item membuka daftar Link Saya dengan filter yang sesuai.
-- Statistik Linktree: kunjungan `/u/{alamat}`, pengunjung unik, klik tautan, rasio kunjungan→klik, dan tautan teratas. Pelacakan memakai tabel `linktree_events` dan route klik `/u/{alamat}/klik/{tautan}` yang mencatat event sebelum mengalihkan.
+- Panel kesehatan tautan pengguna: kedaluwarsa ≤7 hari, sudah kedaluwarsa, terjadwal, belum pernah diklik, tautan aktif tanpa klik, klik gagal, dan Bio terbit tanpa tautan/alamat. Setiap item membuka daftar Link Saya dengan filter yang sesuai.
+- Statistik Bio: kunjungan `/u/{alamat}`, pengunjung unik, klik tautan, rasio kunjungan→klik, dan tautan teratas. Pelacakan memakai tabel `bio_events` dan route klik `/u/{alamat}/klik/{tautan}` yang mencatat event sebelum mengalihkan.
 - Dashboard admin: filter periode global 7/30/90 yang memengaruhi metrik, grafik pertumbuhan, grafik klik, dan heatmap; delta terhadap periode sebelumnya pada kartu statistik.
 - Widget aktivitas audit terbaru, domain tujuan teratas, heatmap hari × jam, tabel pengguna yang perlu perhatian, peringkat pengguna (jumlah tautan/tautan aktif/total klik/klik gagal/zona waktu), dan ringkasan sistem (penjadwal, antrean, retensi log, ukuran basis data, versi).
-- Panel "Perlu Perhatian" diperluas: admin tanpa 2FA, pengguna baru >7 hari tanpa tautan, pengguna nonaktif dengan tautan aktif, tautan kedaluwarsa ≤7 hari, Linktree terbit tanpa alamat/tautan, login gagal berulang, klik gagal, penjadwal yang belum berdenyut, dan antrean gagal.
+- Panel "Perlu Perhatian" diperluas: admin tanpa 2FA, pengguna baru >7 hari tanpa tautan, pengguna nonaktif dengan tautan aktif, tautan kedaluwarsa ≤7 hari, Bio terbit tanpa alamat/tautan, login gagal berulang, klik gagal, penjadwal yang belum berdenyut, dan antrean gagal.
 - Filter admin baru: pengguna tanpa 2FA/tanpa tautan/nonaktif bertautan; tautan berdasarkan pemilik, tanggal dibuat, kedaluwarsa ≤7 hari, dan lintas zona waktu. Aksi QR tersedia dari tabel tautan admin.
 
 Diubah
@@ -507,9 +507,9 @@ Diperbaiki
 - `AdminAnalyticsService::aktivitasTerbaru()` mengembalikan `Builder` agar cocok dengan `TableWidget::query()`.
 
 Migrasi
-- `database/migrations/2026_10_22_000000_create_linktree_events_table.php` membuat tabel `linktree_events` (profil, tautan opsional, jenis kunjungan/klik, IP hash, user agent, referer, waktu, indeks).
+- `database/migrations/2026_10_22_000000_create_bio_events_table.php` membuat tabel `bio_events` (profil, tautan opsional, jenis kunjungan/klik, IP hash, user agent, referer, waktu, indeks).
 
-**Berkas utama:** `app/Services/Dashboard/{UserStatistikService,UserAktivitasService,UserKesehatanService,UserLinktreeStatistikService,UserDashboardService}.php`, `app/Services/Admin/{AdminDashboardService,AdminAnalyticsService,AdminSystemService,AdminAttentionService}.php`, `app/Filament/Widgets/*`, `app/Filament/User/Pages/UserDashboard.php`, `resources/views/filament/user/pages/kartu/*`, `resources/css/publik/panel.css`, `database/migrations/2026_10_22_000000_create_linktree_events_table.php`.
+**Berkas utama:** `app/Services/Dashboard/{UserStatistikService,UserAktivitasService,UserKesehatanService,UserBioStatistikService,UserDashboardService}.php`, `app/Services/Admin/{AdminDashboardService,AdminAnalyticsService,AdminSystemService,AdminAttentionService}.php`, `app/Filament/Widgets/*`, `app/Filament/User/Pages/UserDashboard.php`, `resources/views/filament/user/pages/kartu/*`, `resources/css/publik/panel.css`, `database/migrations/2026_10_22_000000_create_bio_events_table.php`.
 **Verifikasi:** `php artisan test` 203 passed (793 assertions); Pint passed; `npm run build` berhasil (70 modul); migrasi lokal sudah diterapkan (`Nothing to migrate`). Scheduler produksi harus menjalankan `php artisan schedule:run` setiap menit agar heartbeat status sistem dan peringatan tetap hidup.
 
 ---
@@ -544,7 +544,7 @@ Verifikasi
 Ditambahkan
 - Audit otomatis lewat `ShortUrlAuditObserver` dan `UserAuditObserver` untuk create/update/delete/restore/force delete, termasuk perubahan kolom dan penyamaran kata sandi.
 - Pemulihan data terhapus (`RestoreAction`, `RestoreBulkAction`) dan hapus permanen dengan penjagaan akun sendiri/terlindungi.
-- Resource moderasi `LinktreeProfileResource`, filter rentang tanggal pada empat log, ekspor CSV log admin, dan perintah `logs:purge`.
+- Resource moderasi `BioProfileResource`, filter rentang tanggal pada empat log, ekspor CSV log admin, dan perintah `logs:purge`.
 - Halaman detail pengguna dengan relation manager tautan, riwayat masuk, dan audit; aksi kirim tautan reset, keluarkan sesi, serta masuk sebagai pengguna (dengan banner dan tombol berhenti).
 - Aksi massal tautan: aktifkan, nonaktifkan, perpanjang, dan pindahkan pemilik; infolist detail tautan dengan analitik klik dan riwayat klik.
 - Dashboard admin menampilkan 8 metrik dan peringatan yang dapat diklik menuju halaman tindak lanjut.

@@ -37,7 +37,7 @@ class TautanSayaService
      *
      * Waktu kedaluwarsa dikirim dalam bentuk yang diminta kontrol
      * `datetime-local`, mengikuti kebiasaan service dashboard lain yang
-     * mengembalikan nilai siap tampil (bandingkan `tinjauanLinktree`).
+     * mengembalikan nilai siap tampil (bandingkan `tinjauanBio`).
      *
      * @return array<string, mixed>
      *

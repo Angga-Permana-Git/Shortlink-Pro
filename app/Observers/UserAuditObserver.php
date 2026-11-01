@@ -60,9 +60,9 @@ class UserAuditObserver
             return;
         }
 
-        // Akun yang dihapus tidak boleh meninggalkan tautan/Linktree yang tetap hidup.
+        // Akun yang dihapus tidak boleh meninggalkan tautan/Bio yang tetap hidup.
         $pengguna->shortUrls()->update(['is_active' => false]);
-        $pengguna->linktreeProfile?->update(['is_active' => false]);
+        $pengguna->bioProfile?->update(['is_active' => false]);
 
         $this->catat($pengguna, 'user.delete', ['email' => $pengguna->email]);
     }

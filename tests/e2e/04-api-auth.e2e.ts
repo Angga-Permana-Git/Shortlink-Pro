@@ -1,7 +1,7 @@
 /**
  * Uji API v1 yang memerlukan login (session cookie Laravel).
  *
- * Regresi untuk bug "GET/PUT /api/v1/linktree selalu 401": grup middleware
+ * Regresi untuk bug "GET/PUT /api/v1/bio selalu 401": grup middleware
  * `api` sempat tidak memuat cookie + session sehingga `auth` tidak pernah
  * mengenali pengguna yang sudah masuk (lihat bootstrap/app.php).
  */
@@ -27,7 +27,7 @@ async function daftar(screen: any): Promise<void> {
 }
 
 test.describe("API v1 — endpoint berautentikasi", () => {
-  test("session login bisa membaca dan mengubah profil Linktree sendiri", async ({
+  test("session login bisa membaca dan mengubah profil Bio sendiri", async ({
     app,
     screen,
     browser,
@@ -39,14 +39,14 @@ test.describe("API v1 — endpoint berautentikasi", () => {
     const cookies = await browser.cookies();
     const cookieHeader = cookies.map((c) => `${c.name}=${c.value}`).join("; ");
 
-    const baca = await fetch(new URL("/api/v1/linktree", app.baseUrl), {
+    const baca = await fetch(new URL("/api/v1/bio", app.baseUrl), {
       headers: { Accept: "application/json", cookie: cookieHeader },
     });
     expect(baca.status).toBe(200);
     const { data } = await baca.json();
     expect(data.public_slug).toBeNull();
 
-    const ubah = await fetch(new URL("/api/v1/linktree", app.baseUrl), {
+    const ubah = await fetch(new URL("/api/v1/bio", app.baseUrl), {
       method: "PUT",
       headers: {
         Accept: "application/json",
@@ -61,7 +61,7 @@ test.describe("API v1 — endpoint berautentikasi", () => {
     expect(publik.status).toBe(200);
     expect(await publik.text()).toContain("E2E API");
 
-    const tamu = await fetch(new URL("/api/v1/linktree", app.baseUrl), {
+    const tamu = await fetch(new URL("/api/v1/bio", app.baseUrl), {
       headers: { Accept: "application/json" },
     });
     expect(tamu.status).toBe(401);

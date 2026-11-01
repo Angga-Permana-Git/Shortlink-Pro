@@ -1,7 +1,7 @@
 {{--
     Meta SEO terpusat untuk halaman publik.
 
-    Dipakai semua halaman non-panel: beranda, auth, linktree publik, dan
+    Dipakai semua halaman non-panel: beranda, auth, bio publik, dan
     halaman status tautan. Menerima:
       - $seoJudul: judul tanpa nama brand (brand ditambah di sini)
       - $seoDeskripsi: meta description (sudah diterjemahkan pemanggil)

@@ -90,9 +90,9 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(RoleChangeLog::class, 'target_user_id');
     }
 
-    public function linktreeProfile(): HasOne
+    public function bioProfile(): HasOne
     {
-        return $this->hasOne(LinktreeProfile::class);
+        return $this->hasOne(BioProfile::class);
     }
 
     public function loginAuditLogs(): HasMany

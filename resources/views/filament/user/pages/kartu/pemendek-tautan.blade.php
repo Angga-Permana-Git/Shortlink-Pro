@@ -92,8 +92,8 @@
                     {{ __('ui.panel.unduh_qr') }}
                 </a>
             </div>
-            <p class="lanjut-linktree">
-                <a href="#kartu-linktree">{{ __('ui.panel.pilih_untuk_linktree') }}</a>
+            <p class="lanjut-bio">
+                <a href="#kartu-bio">{{ __('ui.panel.pilih_untuk_bio') }}</a>
             </p>
         </div>
     @endif

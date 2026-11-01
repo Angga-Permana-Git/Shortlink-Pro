@@ -1,6 +1,6 @@
 /**
  * Uji alur pengguna: kartu 02 (buat tautan) → kartu 03 (QR/salin/hapus)
- * → kartu 04 (profil Linktree: isi alamat publik) → buka /u/{alamat}.
+ * → kartu 04 (profil Bio: isi alamat publik) → buka /u/{alamat}.
  *
  * Pendekatan sederhana (karpathy-guidelines §2): gunakan slug otomatis dan
  * identifikasi baris lewat destination URL, bukan mengandalkan panel "Kustom"
@@ -18,7 +18,7 @@ const EMAIL = `e2e.${uniq("u")}@e2e.test`;
 const USERNAME = `e2e${uniq("u")}`;
 const NAME = "E2E User";
 const PASSWORD = "rahasia_jarang123";
-const LINKTREE_ADDR = uniq("addr");
+const BIO_ADDR = uniq("addr");
 const TUJUAN = `https://contoh.e2e/${uniq("tujuan")}`;
 
 async function openCard(browser: any, title: string): Promise<void> {
@@ -105,18 +105,18 @@ test.describe("panel pengguna — alur lengkap", () => {
     await baris.getByRole("button", { name: /^hapus$/i }).tap();
     await expect(screen.getByText("Tautan dihapus.")).toBeVisible();
 
-    // ---- Kartu 04: isi alamat publik Linktree ----
-    await openCard(browser, "Profil Linktree");
-    await screen.getByLabel("Alamat publik").fill(LINKTREE_ADDR);
+    // ---- Kartu 04: isi alamat publik Bio ----
+    await openCard(browser, "Profil Bio");
+    await screen.getByLabel("Alamat publik").fill(BIO_ADDR);
     await browser
       .locator(".kartu")
-      .filter({ hasText: "Profil Linktree" })
+      .filter({ hasText: "Profil Bio" })
       .getByRole("button", { name: /^simpan profil$/i })
       .tap();
 
-    await expect(screen.getByTestId("alamat-linktree")).toBeVisible();
-    const addr = await screen.getByTestId("alamat-linktree").getAttribute("href");
-    expect(addr).toMatch(new RegExp(`/${LINKTREE_ADDR}$`));
+    await expect(screen.getByTestId("alamat-bio")).toBeVisible();
+    const addr = await screen.getByTestId("alamat-bio").getAttribute("href");
+    expect(addr).toMatch(new RegExp(`/${BIO_ADDR}$`));
 
     // buka /u/{alamat}
     await browser.goto(addr!);

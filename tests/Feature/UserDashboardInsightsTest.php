@@ -4,15 +4,15 @@ namespace Tests\Feature;
 
 use App\Filament\User\Pages\UserDashboard;
 use App\Models\ClickEvent;
-use App\Models\LinktreeEvent;
-use App\Models\LinktreeLink;
-use App\Models\LinktreeProfile;
+use App\Models\BioEvent;
+use App\Models\BioLink;
+use App\Models\BioProfile;
 use App\Models\ShortUrl;
 use App\Models\User;
 use App\Services\Dashboard\UserAktivitasService;
 use App\Services\Dashboard\UserDaftarTautanService;
 use App\Services\Dashboard\UserKesehatanService;
-use App\Services\Dashboard\UserLinktreeStatistikService;
+use App\Services\Dashboard\UserBioStatistikService;
 use App\Services\Dashboard\UserStatistikService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -61,7 +61,7 @@ class UserDashboardInsightsTest extends TestCase
         $this->assertSame(50.0, $kualitas['persen']);
     }
 
-    public function test_dashboard_menampilkan_periode_kesehatan_dan_statistik_linktree(): void
+    public function test_dashboard_menampilkan_periode_kesehatan_dan_statistik_bio(): void
     {
         $pengguna = $this->pengguna();
         ShortUrl::factory()->create([
@@ -70,23 +70,23 @@ class UserDashboardInsightsTest extends TestCase
             'total_clicks' => 0,
         ]);
 
-        $profil = LinktreeProfile::create([
+        $profil = BioProfile::create([
             'user_id' => $pengguna->id,
             'display_name' => 'Profil Uji',
             'public_slug' => 'profil-uji',
             'is_active' => true,
         ]);
-        $tautanLinktree = LinktreeLink::create([
+        $tautanBio = BioLink::create([
             'profile_id' => $profil->id,
             'label' => 'Situs',
             'url' => 'https://example.com',
             'is_active' => true,
         ]);
-        LinktreeEvent::create(['linktree_profile_id' => $profil->id, 'jenis' => 'kunjungan', 'ip_hash' => 'a']);
-        LinktreeEvent::create(['linktree_profile_id' => $profil->id, 'jenis' => 'kunjungan', 'ip_hash' => 'a']);
-        LinktreeEvent::create([
-            'linktree_profile_id' => $profil->id,
-            'linktree_link_id' => $tautanLinktree->id,
+        BioEvent::create(['bio_profile_id' => $profil->id, 'jenis' => 'kunjungan', 'ip_hash' => 'a']);
+        BioEvent::create(['bio_profile_id' => $profil->id, 'jenis' => 'kunjungan', 'ip_hash' => 'a']);
+        BioEvent::create([
+            'bio_profile_id' => $profil->id,
+            'bio_link_id' => $tautanBio->id,
             'jenis' => 'klik',
             'ip_hash' => 'a',
         ]);
@@ -97,7 +97,7 @@ class UserDashboardInsightsTest extends TestCase
             ->assertSee('Tren Klik 30 Hari')
             ->assertSee('Kesehatan Tautan')
             ->assertSee('Kedaluwarsa ≤7 hari')
-            ->assertSee('Statistik Linktree')
+            ->assertSee('Statistik Link in Bio')
             ->assertSee('50%')
             ->call('ubahPeriode', 7)
             ->assertSet('periode', 7)
@@ -143,32 +143,32 @@ class UserDashboardInsightsTest extends TestCase
         $this->assertCount(3, $daftar->daftar($pengguna, '', 'never'));
     }
 
-    public function test_statistik_linktree_menghitung_kunjungan_pengunjung_dan_ctr(): void
+    public function test_statistik_bio_menghitung_kunjungan_pengunjung_dan_ctr(): void
     {
         $pengguna = $this->pengguna();
-        $profil = LinktreeProfile::create([
+        $profil = BioProfile::create([
             'user_id' => $pengguna->id,
             'display_name' => 'Profil Uji',
             'public_slug' => 'profil-uji',
             'is_active' => true,
         ]);
-        $tautan = LinktreeLink::create([
+        $tautan = BioLink::create([
             'profile_id' => $profil->id,
             'label' => 'Situs',
             'url' => 'https://example.com',
             'is_active' => true,
         ]);
 
-        LinktreeEvent::create(['linktree_profile_id' => $profil->id, 'jenis' => 'kunjungan', 'ip_hash' => 'a']);
-        LinktreeEvent::create(['linktree_profile_id' => $profil->id, 'jenis' => 'kunjungan', 'ip_hash' => 'b']);
-        LinktreeEvent::create([
-            'linktree_profile_id' => $profil->id,
-            'linktree_link_id' => $tautan->id,
+        BioEvent::create(['bio_profile_id' => $profil->id, 'jenis' => 'kunjungan', 'ip_hash' => 'a']);
+        BioEvent::create(['bio_profile_id' => $profil->id, 'jenis' => 'kunjungan', 'ip_hash' => 'b']);
+        BioEvent::create([
+            'bio_profile_id' => $profil->id,
+            'bio_link_id' => $tautan->id,
             'jenis' => 'klik',
             'ip_hash' => 'a',
         ]);
 
-        $statistik = app(UserLinktreeStatistikService::class)->ringkasan($pengguna);
+        $statistik = app(UserBioStatistikService::class)->ringkasan($pengguna);
         $this->assertSame(2, $statistik['kunjungan']);
         $this->assertSame(2, $statistik['pengunjung']);
         $this->assertSame(1, $statistik['klik']);

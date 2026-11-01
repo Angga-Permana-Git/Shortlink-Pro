@@ -18,10 +18,10 @@ class UserDashboardService
         private readonly UserStatistikService $statistik,
         private readonly UserDaftarTautanService $daftar,
         private readonly UserEksporTautanService $ekspor,
-        private readonly UserTinjauanLinktreeService $tinjauan,
+        private readonly UserTinjauanBioService $tinjauan,
         private readonly UserAktivitasService $aktivitas,
         private readonly UserKesehatanService $kesehatan,
-        private readonly UserLinktreeStatistikService $linktree,
+        private readonly UserBioStatistikService $bio,
     ) {}
 
     /**
@@ -56,9 +56,9 @@ class UserDashboardService
     /**
      * @return array{terbit: bool, alamat: string|null, kunjungan: int, pengunjung: int, klik: int, ctr: float, tautan: array<int, array{label: string, klik: int}>}
      */
-    public function linktreeStatistik(User $pengguna, int $hari = 30): array
+    public function bioStatistik(User $pengguna, int $hari = 30): array
     {
-        return $this->linktree->ringkasan($pengguna, $hari);
+        return $this->bio->ringkasan($pengguna, $hari);
     }
 
     /**
@@ -93,7 +93,7 @@ class UserDashboardService
     /**
      * @return array{nama: string, bio: string|null, logo: string|null, terbit: bool, slug: string|null, alamat: string|null, tautan: array<int, array{label: string, url: string}>}
      */
-    public function tinjauanLinktree(User $pengguna): array
+    public function tinjauanBio(User $pengguna): array
     {
         return $this->tinjauan->tinjauan($pengguna);
     }

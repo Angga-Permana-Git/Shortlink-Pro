@@ -123,6 +123,7 @@ class BahasaTest extends TestCase
             'email' => 'budi@example.com',
             'password' => 'kata-sandi-panjang',
             'password_confirmation' => 'kata-sandi-panjang',
+            'setuju' => '1',
         ])->assertRedirect('/user');
 
         $this->assertSame('en', User::where('username', 'budi_santoso')->firstOrFail()->locale);

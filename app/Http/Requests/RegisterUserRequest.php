@@ -18,6 +18,7 @@ class RegisterUserRequest extends FormRequest
             'username' => ['required', 'alpha_dash', 'max:255', 'unique:users,username'],
             'email' => ['required', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'string', 'min:12', 'confirmed'],
+            'setuju' => ['accepted'],
         ];
     }
 }

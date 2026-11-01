@@ -53,8 +53,8 @@ test.describe("API v1 — endpoint publik", () => {
 });
 
 test.describe("API v1 — autentikasi", () => {
-  test("GET /api/v1/linktree memerlukan autentikasi (401)", async ({ app }) => {
-    const res = await fetch(new URL("/api/v1/linktree", app.baseUrl), {
+  test("GET /api/v1/bio memerlukan autentikasi (401)", async ({ app }) => {
+    const res = await fetch(new URL("/api/v1/bio", app.baseUrl), {
       headers: { Accept: "application/json" },
     });
     expect(res.status).toBe(401);

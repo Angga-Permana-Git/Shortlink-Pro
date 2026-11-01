@@ -170,6 +170,31 @@
     background: var(--warna-smart-navy-gelap);
 }
 
+.tombol-auth:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+}
+
+/* Checkbox persetujuan S&K + privasi pada formulir daftar (DFB Bagian 4.2). */
+.form-auth__setuju {
+    display: flex;
+    gap: var(--jarak-2);
+    align-items: flex-start;
+    color: var(--warna-teks-judul);
+    font-size: var(--teks-sm);
+    cursor: pointer;
+}
+
+.form-auth__setuju input {
+    margin-top: 0.2rem;
+    accent-color: var(--warna-smart-navy);
+}
+
+.form-auth__setuju a {
+    color: var(--warna-smart-navy);
+    font-weight: 600;
+}
+
 .tombol-auth--sekunder {
     margin-top: var(--jarak-2);
     background: transparent;

@@ -68,9 +68,9 @@ docker-compose.override.yaml
 /storage/app/public/branding/*
 /public/storage/branding/*
 
-# Logo profil Linktree milik pengguna; diunggah ulang dari halaman /user.
-/storage/app/public/linktree/*
-/public/storage/linktree/*
+# Logo profil Bio milik pengguna; diunggah ulang dari halaman /user.
+/storage/app/public/bio/*
+/public/storage/bio/*
 
 # File sementara upload (Livewire / tmp upload)
 /storage/app/private/livewire-tmp/*

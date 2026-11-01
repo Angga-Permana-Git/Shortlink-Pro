@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Filament\Admin\Resources\LinktreeProfileResource\Pages\EditLinktreeProfile;
-use App\Filament\Admin\Resources\LinktreeProfileResource\Pages\ListLinktreeProfiles;
+use App\Filament\Admin\Resources\BioProfileResource\Pages\EditBioProfile;
+use App\Filament\Admin\Resources\BioProfileResource\Pages\ListBioProfiles;
 use App\Models\AuditLog;
-use App\Models\LinktreeProfile;
+use App\Models\BioProfile;
 use App\Models\ShortUrl;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -26,9 +26,9 @@ class AdminModerationTest extends TestCase
         ]);
     }
 
-    private function profil(User $pemilik, string $slug = 'profil-saya'): LinktreeProfile
+    private function profil(User $pemilik, string $slug = 'profil-saya'): BioProfile
     {
-        return LinktreeProfile::create([
+        return BioProfile::create([
             'user_id' => $pemilik->id,
             'public_slug' => $slug,
             'display_name' => 'Profil '.$pemilik->name,
@@ -37,19 +37,19 @@ class AdminModerationTest extends TestCase
         ]);
     }
 
-    public function test_admin_can_moderate_linktree_profile(): void
+    public function test_admin_can_moderate_bio_profile(): void
     {
         $admin = $this->admin();
         $pemilik = User::factory()->create();
         $profil = $this->profil($pemilik);
 
         Livewire::actingAs($admin)
-            ->test(ListLinktreeProfiles::class)
+            ->test(ListBioProfiles::class)
             ->assertOk()
             ->assertCanSeeTableRecords([$profil]);
 
         Livewire::actingAs($admin)
-            ->test(EditLinktreeProfile::class, ['record' => $profil->id])
+            ->test(EditBioProfile::class, ['record' => $profil->id])
             ->fillForm([
                 'display_name' => 'Nama Baru',
                 'bio' => 'Keterangan baru',
@@ -59,7 +59,7 @@ class AdminModerationTest extends TestCase
             ->call('save')
             ->assertHasNoFormErrors();
 
-        $this->assertDatabaseHas('linktree_profiles', [
+        $this->assertDatabaseHas('bio_profiles', [
             'id' => $profil->id,
             'display_name' => 'Nama Baru',
             'public_slug' => 'alamat-baru',
@@ -74,7 +74,7 @@ class AdminModerationTest extends TestCase
         $kedua = $this->profil(User::factory()->create(), 'milik-kedua');
 
         Livewire::actingAs($admin)
-            ->test(EditLinktreeProfile::class, ['record' => $kedua->id])
+            ->test(EditBioProfile::class, ['record' => $kedua->id])
             ->fillForm([
                 'display_name' => $kedua->display_name,
                 'bio' => $kedua->bio,

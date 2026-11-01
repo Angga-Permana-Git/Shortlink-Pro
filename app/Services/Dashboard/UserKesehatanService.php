@@ -14,7 +14,7 @@ class UserKesehatanService
     public function ringkasan(User $pengguna): array
     {
         $dasar = fn () => ShortUrl::query()->where('owner_id', $pengguna->id);
-        $profil = $pengguna->linktreeProfile;
+        $profil = $pengguna->bioProfile;
 
         return [
             'kedaluwarsa_7' => $dasar()->where('is_active', true)->whereBetween('expires_at', [now(), now()->addDays(7)])->count(),
@@ -23,8 +23,8 @@ class UserKesehatanService
             'belum_diklik' => $dasar()->where('total_clicks', 0)->count(),
             'aktif_tanpa_klik' => $dasar()->where('is_active', true)->where('total_clicks', 0)->count(),
             'klik_gagal' => $dasar()->whereHas('clicks', fn ($q) => $q->where('status', 'wrong_password'))->count(),
-            'linktree_kosong' => (bool) ($profil?->is_active && $profil->links()->count() === 0),
-            'linktree_tanpa_alamat' => (bool) ($profil?->is_active && ! $profil->public_slug),
+            'bio_kosong' => (bool) ($profil?->is_active && $profil->links()->count() === 0),
+            'bio_tanpa_alamat' => (bool) ($profil?->is_active && ! $profil->public_slug),
         ];
     }
 
@@ -52,12 +52,12 @@ class UserKesehatanService
                 'target' => $item[4],
             ])->values()->all();
 
-        if ($angka['linktree_kosong']) {
-            $hasil[] = ['judul' => __('ui.panel.kesehatan_linktree_kosong'), 'pesan' => __('ui.panel.kesehatan_linktree_kosong_pesan'), 'jumlah' => 1, 'filter' => '', 'target' => 'linktree'];
+        if ($angka['bio_kosong']) {
+            $hasil[] = ['judul' => __('ui.panel.kesehatan_bio_kosong'), 'pesan' => __('ui.panel.kesehatan_bio_kosong_pesan'), 'jumlah' => 1, 'filter' => '', 'target' => 'bio'];
         }
 
-        if ($angka['linktree_tanpa_alamat']) {
-            $hasil[] = ['judul' => __('ui.panel.kesehatan_linktree_tanpa_alamat'), 'pesan' => __('ui.panel.kesehatan_linktree_tanpa_alamat_pesan'), 'jumlah' => 1, 'filter' => '', 'target' => 'linktree'];
+        if ($angka['bio_tanpa_alamat']) {
+            $hasil[] = ['judul' => __('ui.panel.kesehatan_bio_tanpa_alamat'), 'pesan' => __('ui.panel.kesehatan_bio_tanpa_alamat_pesan'), 'jumlah' => 1, 'filter' => '', 'target' => 'bio'];
         }
 
         return $hasil;

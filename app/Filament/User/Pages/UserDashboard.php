@@ -4,7 +4,7 @@ namespace App\Filament\User\Pages;
 
 use App\Filament\User\Pages\Concerns\MembuatTautan;
 use App\Filament\User\Pages\Concerns\MengelolaDaftarTautan;
-use App\Filament\User\Pages\Concerns\MengelolaLinktree;
+use App\Filament\User\Pages\Concerns\MengelolaBio;
 use App\Filament\User\Pages\Concerns\MengelolaTautan;
 use App\Filament\User\Pages\Concerns\MengelolaZonaWaktu;
 use App\Models\User;
@@ -17,7 +17,7 @@ use Livewire\WithFileUploads;
 /**
  * Halaman tunggal pengguna setelah masuk.
  *
- * Keempat kartu (dashboard, pemendek tautan, link saya, profil Linktree) berada
+ * Keempat kartu (dashboard, pemendek tautan, link saya, profil Bio) berada
  * pada satu lembar, sehingga pengguna tidak perlu berpindah halaman. Halaman ini
  * memakai layout sendiri tanpa sidebar dan tidak didaftarkan di navigasi panel.
  *
@@ -30,7 +30,7 @@ class UserDashboard extends Page
 {
     use MembuatTautan;
     use MengelolaDaftarTautan;
-    use MengelolaLinktree;
+    use MengelolaBio;
     use MengelolaTautan;
     use MengelolaZonaWaktu;
     use WithFileUploads;
@@ -62,9 +62,9 @@ class UserDashboard extends Page
 
         $layanan = app(UserDashboardService::class);
         $pengguna = auth()->user();
-        $tinjauan = $layanan->tinjauanLinktree($pengguna);
+        $tinjauan = $layanan->tinjauanBio($pengguna);
 
-        $this->pilihanLinktree = $this->idTautanTerpilih($layanan, $pengguna);
+        $this->pilihanBio = $this->idTautanTerpilih($layanan, $pengguna);
         $this->terbitkan = $tinjauan['terbit'];
         $this->profil['display_name'] = $tinjauan['nama'];
         $this->profil['bio'] = (string) $tinjauan['bio'];
@@ -83,7 +83,7 @@ class UserDashboard extends Page
 
     /**
      * Data segar untuk tampilan, dihitung ulang setiap render supaya kartu
-     * link dan tinjauan Linktree selalu menampilkan keadaan terakhir.
+     * link dan tinjauan Bio selalu menampilkan keadaan terakhir.
      *
      * @return array<string, mixed>
      */
@@ -105,10 +105,10 @@ class UserDashboard extends Page
             'trenKlik' => $layanan->trenKlik($pengguna, $this->periode),
             'aktivitas' => $layanan->aktivitas($pengguna, $this->periode),
             'kesehatan' => $layanan->kesehatan($pengguna),
-            'linktreeStatistik' => $layanan->linktreeStatistik($pengguna, $this->periode),
+            'bioStatistik' => $layanan->bioStatistik($pengguna, $this->periode),
             'tautanTerpopuler' => $layanan->tautanTerpopuler($pengguna),
             'daftarTautan' => $layanan->daftarTautan($pengguna, $this->pencarian, $this->filterStatus, $this->urutkan),
-            'tinjauan' => $layanan->tinjauanLinktree($pengguna),
+            'tinjauan' => $layanan->tinjauanBio($pengguna),
         ];
     }
 

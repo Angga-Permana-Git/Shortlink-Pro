@@ -13,7 +13,7 @@
                 <li>
                     <button type="button" class="kesehatan__item"
                             x-data
-                            @click="$wire.terapkanFilter('{{ $item['filter'] }}'); document.getElementById('{{ $item['target'] === 'linktree' ? 'kartu-profil-linktree' : 'kartu-linktree' }}')?.scrollIntoView({behavior: 'smooth'})">
+                            @click="$wire.terapkanFilter('{{ $item['filter'] }}'); document.getElementById('{{ $item['target'] === 'bio' ? 'kartu-profil-bio' : 'kartu-bio' }}')?.scrollIntoView({behavior: 'smooth'})">
                         <span class="kesehatan__jumlah">{{ $item['jumlah'] }}</span>
                         <span>
                             <strong class="kesehatan__judul">{{ $item['judul'] }}</strong>

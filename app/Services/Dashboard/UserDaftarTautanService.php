@@ -4,7 +4,7 @@ namespace App\Services\Dashboard;
 
 use App\Models\ShortUrl;
 use App\Models\User;
-use App\Services\Linktree\LinktreeService;
+use App\Services\Bio\BioService;
 use App\Services\Time\UserTimezoneService;
 use Carbon\CarbonInterface;
 
@@ -17,7 +17,7 @@ use Carbon\CarbonInterface;
 class UserDaftarTautanService
 {
     public function __construct(
-        private readonly LinktreeService $linktree,
+        private readonly BioService $bio,
         private readonly UserTimezoneService $waktu,
     ) {}
 
@@ -32,7 +32,7 @@ class UserDaftarTautanService
      */
     public function daftar(User $pengguna, string $pencarian = '', string $filterStatus = '', string $urutkan = 'terbaru'): array
     {
-        $dipilih = $this->linktree->profile($pengguna)->links()->pluck('url')->all();
+        $dipilih = $this->bio->profile($pengguna)->links()->pluck('url')->all();
 
         $query = ShortUrl::query()
             ->where('owner_id', $pengguna->id)

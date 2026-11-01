@@ -2,7 +2,7 @@
  * Modul tampilan halaman tunggal pengguna.
  *
  * Tugasnya hanya memasang interaksi tampilan: membuka panel fitur pemendek,
- * menyalin tautan ke papan klip, dan menggulir ke kartu Linktree setelah tautan
+ * menyalin tautan ke papan klip, dan menggulir ke kartu Bio setelah tautan
  * dibuat. Penyimpanan data ditangani aksi Livewire pada halaman, bukan modul
  * ini.
  *
@@ -105,10 +105,10 @@ document.addEventListener('click', (peristiwa) => {
 
 /*
     Halaman mengirim acara ini setelah tautan berhasil dibuat supaya pengguna
-    langsung dibawa ke kartu Linktree.
+    langsung dibawa ke kartu Bio.
 */
 window.addEventListener(ACARA.tautanDibuat, () => {
-    document.querySelector(SELEKTOR.kartuLinktree)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.querySelector(SELEKTOR.kartuBio)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
 /*

@@ -34,6 +34,7 @@ class PublicShortUrlTest extends TestCase
             'email' => 'baru@example.test',
             'password' => 'password-rahasia',
             'password_confirmation' => 'password-rahasia',
+            'setuju' => '1',
         ])->assertRedirect('/user');
 
         $this->assertDatabaseMissing('users', ['password' => 'password-rahasia']);
@@ -52,18 +53,18 @@ class PublicShortUrlTest extends TestCase
     }
 
     /**
-     * Linktree hanya fasilitas pengguna yang sudah masuk, jadi alur pemendekan
+     * Link in Bio hanya fasilitas pengguna yang sudah masuk, jadi alur pemendekan
      * di halaman awal tidak boleh menawarkan pengelolaannya (PRDapp.md bagian 5
      * nomor 5).
      */
-    public function test_home_page_does_not_offer_linktree(): void
+    public function test_home_page_does_not_offer_bio(): void
     {
         Setting::set('force_sso', false);
 
         $this->get('/')
             ->assertOk()
-            ->assertDontSee('/user/linktree-settings')
-            ->assertDontSee('Halaman Linktree Saya');
+            ->assertDontSee('/user/bio-settings')
+            ->assertDontSee('Halaman Link in Bio Saya');
     }
 
     public function test_json_shorten_returns_short_url_with_qr(): void

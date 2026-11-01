@@ -5,7 +5,7 @@
     kartu, dan komponen formulir pemendek dipakai ulang dari beranda.css,
     sehingga satu-satunya perbedaan dengan beranda adalah isi kartunya. Berkas
     ini hanya menambahkan komponen yang khas halaman ini: kepala kartu, angka
-    ringkas, daftar tautan beserta aksinya, dan pratinjau Linktree.
+    ringkas, daftar tautan beserta aksinya, dan pratinjau Bio.
 
     Mobile-first: gaya dasar ditulis untuk layar kecil, penyesuaian untuk layar
     lebih besar ada di bagian akhir memakai breakpoint 40rem. Semua nilai warna,
@@ -552,7 +552,7 @@
 }
 
 /*
-    Kartu 4: pratinjau halaman Linktree publik yang akan dilihat pengunjung.
+    Kartu 4: pratinjau halaman Bio publik yang akan dilihat pengunjung.
 */
 
 .tinjauan {
@@ -578,14 +578,14 @@
     overflow-wrap: anywhere;
 }
 
-/* Tautan lanjut dari kartu pemendek ke kartu Linktree. */
+/* Tautan lanjut dari kartu pemendek ke kartu Bio. */
 
-.lanjut-linktree {
+.lanjut-bio {
     margin: var(--jarak-3) 0 0;
     font-size: var(--teks-sm);
 }
 
-.lanjut-linktree a {
+.lanjut-bio a {
     color: var(--warna-smart-navy);
     font-weight: 600;
 }

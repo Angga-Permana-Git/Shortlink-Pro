@@ -172,7 +172,7 @@
     </section>
 </main>
 
-<footer class="kaki">© {{ date('Y') }} {{ $branding['nama'] }}</footer>
+<footer class="kaki">© {{ date('Y') }} {{ $branding['nama'] }} | <a href="{{ route('legal.tentang') }}">{{ __('ui.kaki.tentang') }}</a> | <a href="{{ route('legal.syarat') }}">{{ __('ui.kaki.syarat') }}</a> | <a href="{{ route('legal.privasi') }}">{{ __('ui.kaki.privasi') }}</a></footer>
 
 @vite('resources/js/publik/beranda.js')
 </body>

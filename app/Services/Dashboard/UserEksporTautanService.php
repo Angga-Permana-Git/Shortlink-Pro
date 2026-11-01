@@ -20,7 +20,7 @@ class UserEksporTautanService
     {
         $daftar = $this->daftar->daftar($pengguna, $pencarian, $filterStatus, $urutkan);
 
-        $baris = [['Nama Pendek', 'URL Tujuan', 'Total Klik', 'Status', 'Kedaluwarsa', 'Bersandi', 'Di Linktree']];
+        $baris = [['Nama Pendek', 'URL Tujuan', 'Total Klik', 'Status', 'Kedaluwarsa', 'Bersandi', 'Di Link in Bio']];
 
         foreach ($daftar as $tautan) {
             $baris[] = [

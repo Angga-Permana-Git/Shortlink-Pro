@@ -10,8 +10,8 @@
     <div class="daftar-tautan__baris">
         <label class="daftar-tautan__pilih">
             <input class="daftar-tautan__kotak" type="checkbox"
-                   wire:model="pilihanLinktree" value="{{ $tautan['id'] }}">
-            <span class="sr-only">{{ __('ui.panel.tampilkan_di_linktree', ['slug' => $tautan['slug']]) }}</span>
+                   wire:model="pilihanBio" value="{{ $tautan['id'] }}">
+            <span class="sr-only">{{ __('ui.panel.tampilkan_di_bio', ['slug' => $tautan['slug']]) }}</span>
         </label>
 
         <div class="daftar-tautan__isi">
@@ -66,7 +66,7 @@
                 @if ($tautan['dipilih'])
                     <span class="tanda tanda--pilih">
                         <x-ikon nama="cek" />
-                        {{ __('ui.panel.di_linktree') }}
+                        {{ __('ui.panel.di_bio') }}
                     </span>
                 @endif
             </span>

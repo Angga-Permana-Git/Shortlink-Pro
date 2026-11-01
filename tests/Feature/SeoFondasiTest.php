@@ -2,7 +2,7 @@
 
 namespace Tests\Feature;
 
-use App\Dto\LinktreeLinkDTO;
+use App\Dto\BioLinkDTO;
 use App\Models\ShortUrl;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -68,17 +68,20 @@ class SeoFondasiTest extends TestCase
     public function test_sitemap_hanya_berisi_halaman_yang_boleh_diindeks(): void
     {
         $pengguna = User::factory()->create(['role' => 'user', 'is_active' => true]);
-        $layanan = app(\App\Services\Linktree\LinktreeService::class);
+        $layanan = app(\App\Services\Bio\BioService::class);
         $profil = $layanan->profile($pengguna);
         $profil->update(['public_slug' => 'toko-contoh', 'is_active' => true]);
-        $layanan->syncLinks($profil, [new LinktreeLinkDTO('Toko', 'https://example.com')]);
+        $layanan->syncLinks($profil, [new BioLinkDTO('Toko', 'https://example.com')]);
 
         $sitemap = $this->get(route('sitemap'));
 
         $sitemap->assertOk()->assertHeader('Content-Type', 'application/xml; charset=utf-8');
         $isi = $sitemap->getContent();
-        $this->assertStringContainsString(route('linktree.show', 'toko-contoh'), $isi);
+        $this->assertStringContainsString(route('bio.show', 'toko-contoh'), $isi);
         $this->assertStringContainsString(route('register'), $isi);
+        $this->assertStringContainsString(route('legal.tentang'), $isi);
+        $this->assertStringContainsString(route('legal.syarat'), $isi);
+        $this->assertStringContainsString(route('legal.privasi'), $isi);
         $this->assertStringNotContainsString('/qr/', $isi);
         $this->assertStringNotContainsString('/nonaktif', $isi);
     }
@@ -93,5 +96,40 @@ class SeoFondasiTest extends TestCase
         $this->assertStringContainsString('Disallow: /admin', $isi);
         $this->assertStringContainsString('Disallow: /user', $isi);
         $this->assertStringContainsString('Allow: /u/', $isi);
+    }
+
+    public function test_halaman_legal_bisa_dibuka_dan_punya_canonical(): void
+    {
+        $this->get(route('legal.tentang'))
+            ->assertOk()
+            ->assertSee('<link rel="canonical" href="http://localhost/tentang-saya"', false)
+            ->assertSee('mailto:angga.permana.n.n@gmail.com', false);
+
+        $this->get(route('legal.syarat'))
+            ->assertOk()
+            ->assertSee('<link rel="canonical" href="http://localhost/syarat-ketentuan"', false);
+
+        $this->get(route('legal.privasi'))
+            ->assertOk()
+            ->assertSee('<link rel="canonical" href="http://localhost/kebijakan-privasi"', false);
+    }
+
+    public function test_slug_legal_dilarang_untuk_tautan_pendek(): void
+    {
+        foreach (['tentang-saya', 'syarat-ketentuan', 'kebijakan-privasi'] as $slug) {
+            $this->post(route('shorten.public'), [
+                'destination_url' => 'https://example.com/'.$slug,
+                'slug' => $slug,
+            ])->assertSessionHasErrors('slug');
+        }
+    }
+
+    public function test_beranda_punya_tautan_footer_legal_yang_bisa_diklik(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('href="http://localhost/tentang-saya"', false)
+            ->assertSee('href="http://localhost/syarat-ketentuan"', false)
+            ->assertSee('href="http://localhost/kebijakan-privasi"', false);
     }
 }

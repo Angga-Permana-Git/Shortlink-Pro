@@ -2,7 +2,7 @@
 
 # Shortlink Pro
 
-**Pemendek tautan self-hosted: pemakaian publik, panel pengguna, panel admin, dan Linktree dalam satu aplikasi.**
+**Pemendek tautan self-hosted: pemakaian publik, panel pengguna, panel admin, dan Bio dalam satu aplikasi.**
 
 [![Laravel](https://img.shields.io/badge/Laravel-12-FF2D20?logo=laravel&logoColor=white)](https://laravel.com)
 [![Filament](https://img.shields.io/badge/Filament-5-FDAE4B)](https://filamentphp.com)
@@ -21,7 +21,7 @@
 Shortlink Pro adalah aplikasi pemendek tautan yang dapat dipakai untuk dua kebutuhan sekaligus:
 
 - **Publik** — pengunjung dapat memendekkan tautan tanpa membuat akun melalui beranda atau `POST /api/v1/links`.
-- **Terkelola** — pengguna dengan akun dapat mengelola tautan, melihat statistik klik, mengekspor data, dan memiliki halaman Linktree pribadi. Administrator memegang kendali penuh lewat panel Filament.
+- **Terkelola** — pengguna dengan akun dapat mengelola tautan, melihat statistik klik, mengekspor data, dan memiliki halaman Bio pribadi. Administrator memegang kendali penuh lewat panel Filament.
 
 Administrator juga dapat mengaktifkan **wajib SSO**, sehingga tamu diarahkan ke Keycloak sebelum dapat memakai aplikasi. Setiap tautan memiliki pemilik yang jelas, masa berlaku opsional, proteksi kata sandi, dan analitik klik.
 
@@ -47,11 +47,11 @@ Antarmuka tersedia dalam **dua bahasa** (Bahasa Indonesia dan English) dan mengi
 - Widget panel: tren pertumbuhan, tautan populer, domain tujuan, peta panas klik, pengguna aktif, dan kesehatan akun.
 - Filter periode dashboard.
 
-### Linktree
+### Bio
 
 - Profil publik di `/u/{alamat}` dengan slug publik yang dapat diubah.
 - Daftar tautan yang dapat diurutkan, masing-masing dengan penghitung klik.
-- Pencatatan event klik Linktree untuk analitik.
+- Pencatatan event klik Bio untuk analitik.
 
 ### Akun dan bahasa
 
@@ -64,8 +64,8 @@ Antarmuka tersedia dalam **dua bahasa** (Bahasa Indonesia dan English) dan mengi
 
 ### Panel dan operasional
 
-- **Panel pengguna**: dashboard, CRUD tautan, pengaturan Linktree, ekspor CSV.
-- **Panel admin**: pengguna, tautan, profil Linktree, audit log, audit login, riwayat perubahan peran, impor CSV, ekspor log, impersonasi pengguna.
+- **Panel pengguna**: dashboard, CRUD tautan, pengaturan Bio, ekspor CSV.
+- **Panel admin**: pengguna, tautan, profil Bio, audit log, audit login, riwayat perubahan peran, impor CSV, ekspor log, impersonasi pengguna.
 - Pengaturan admin: branding (logo/nama), keamanan akun (2FA, IP admin yang diizinkan, wajib SSO), operasional (slug dicadangkan, kedaluwarsa bawaan, retensi log, batas laju, pengumuman), dan zona waktu.
 - Notifikasi dalam aplikasi untuk admin (mis. tautan bermasalah atau antrean perhatian).
 - Perintah terjadwal: pembersihan log harian, pengingat operasional per jam, dan denyut penjadwal untuk widget status.
@@ -75,10 +75,10 @@ Antarmuka tersedia dalam **dua bahasa** (Bahasa Indonesia dan English) dan mengi
 | Metode | Endpoint | Keterangan |
 |--------|----------|------------|
 | `POST` | `/api/v1/links` | Membuat tautan publik. Body: `destination_url` (wajib), `slug`, `expires_at`, `password` (opsional). |
-| `GET` | `/api/v1/linktree` | Profil Linktree milik pengguna yang sedang login. |
-| `PUT` | `/api/v1/linktree` | Memperbarui profil/tautan Linktree. |
+| `GET` | `/api/v1/bio` | Profil Bio milik pengguna yang sedang login. |
+| `PUT` | `/api/v1/bio` | Memperbarui profil/tautan Bio. |
 
-API memakai sesi login (cookie) untuk endpoint Linktree; belum ada autentikasi API key. Galat validasi dikembalikan sebagai `422` dengan `error_code`, `message`, `trace_id`, dan `errors`.
+API memakai sesi login (cookie) untuk endpoint Bio; belum ada autentikasi API key. Galat validasi dikembalikan sebagai `422` dengan `error_code`, `message`, `trace_id`, dan `errors`.
 
 ## Teknologi
 
@@ -172,7 +172,7 @@ Pengaturan yang dapat diubah tanpa deploy ada di panel admin: **Branding**, **Ke
 - PHP sudah dipatch untuk PHP2Shell; lihat [SECURITY.md](SECURITY.md) untuk prosedur upgrade, mitigasi, dan rollback.
 - Kata sandi pengguna di-hash (bcrypt 12); kata sandi tautan memakai hash dan penguncian percobaan.
 - 2FA tersedia untuk admin, ditambah daftar IP admin yang diizinkan.
-- Rate limit pada login lokal, registrasi, reset kata sandi, pembuatan tautan, dan klik Linktree.
+- Rate limit pada login lokal, registrasi, reset kata sandi, pembuatan tautan, dan klik Bio.
 - Header keamanan dipasang middleware: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`.
 - Cookie sesi mendukung `Secure`, `HttpOnly`, dan `SameSite`.
 - IP pengunjung disimpan sebagai hash; log memiliki batas retensi.
@@ -221,19 +221,19 @@ app/
 │   ├── Controllers/         # Publik, auth, API, redirect
 │   └── Middleware/          # Keamanan, mode akses, trace ID
 ├── Models/                  # Eloquent
-├── Services/                # ShortUrl, Linktree, Analytics, Auth, Setting, ...
+├── Services/                # ShortUrl, Bio, Analytics, Auth, Setting, ...
 ├── Support/                 # Enum, validasi, helper
 └── Exceptions/              # Format galat seragam (error_code, trace_id)
 
 bootstrap/                   # app.php, providers, cache
 config/                      # Termasuk pemendek.php (QR, kata sandi, Safe Browsing)
-database/migrations/         # Skema pengguna, tautan, klik, Linktree, audit, 2FA
+database/migrations/         # Skema pengguna, tautan, klik, Bio, audit, 2FA
 docker/                      # Dockerfile, apache.conf, php.ini, entrypoint.sh
 install.sh                   # Pemasang reverse proxy nginx di host
 lang/{id,en}/                # ui.php, validation, auth, passwords, en.json
 nginx/                       # Konfigurasi reverse proxy host
 resources/
-├── css/publik/              # dasar, beranda, auth, panel, tautan, linktree
+├── css/publik/              # dasar, beranda, auth, panel, tautan, bio
 ├── js/publik/               # beranda.js, panel.js, auth.js
 └── views/                   # Blade publik, auth, panel Filament
 routes/                      # web.php, api.php, console.php
@@ -260,9 +260,9 @@ Keadaan per 2026-10-23, setelah 218 test dan `pint` lolos:
 
 - Pemendek tautan: slug otomatis/kustom, masa berlaku, soft delete, proteksi kata sandi dengan penguncian percobaan, kode QR bercache.
 - Pemeriksaan tujuan ke Google Safe Browsing di lapisan validasi, dengan fail-open bila kunci kosong; impor CSV sengaja melewatinya.
-- Analitik: tren, domain tujuan, jam/hari tersibuk, kualitas klik, kesehatan tautan, dan statistik Linktree lewat `linktree_events`.
-- Panel pengguna satu lembar (`/user`) berisi empat kartu: Dashboard, Pemendek Tautan, Link Saya, Profil Linktree.
-- Panel admin: pengguna, tautan, moderasi Linktree, empat halaman log dengan ekspor CSV, impor CSV, 2FA, allowlist IP, impersonasi, dan pengaturan branding/operasional.
+- Analitik: tren, domain tujuan, jam/hari tersibuk, kualitas klik, kesehatan tautan, dan statistik Bio lewat `bio_events`.
+- Panel pengguna satu lembar (`/user`) berisi empat kartu: Dashboard, Pemendek Tautan, Link Saya, Profil Bio.
+- Panel admin: pengguna, tautan, moderasi Bio, empat halaman log dengan ekspor CSV, impor CSV, 2FA, allowlist IP, impersonasi, dan pengaturan branding/operasional.
 - Dua bahasa penuh di sisi pengguna dan publik; label kustom panel admin juga sudah diterjemahkan (`lang/en.json`, 332 kunci), meski sebagian teks bawaan Filament masih mengikuti paket.
 - Registrasi dengan contoh isian dan tombol lihat/sembunyikan kata sandi.
 - Paket deploy produksi di root repo (`docker-compose.fulldb.yaml` + `nginx/` host + Cloudflare Tunnel) dan `Dockerfile` empat tahap.

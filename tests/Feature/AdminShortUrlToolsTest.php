@@ -40,7 +40,7 @@ class AdminShortUrlToolsTest extends TestCase
             ->assertSee('Tautan Aktif')
             ->assertSee('Total Klik')
             ->assertSee('Klik 30 Hari')
-            ->assertSee('Linktree Terbit')
+            ->assertSee('Link in Bio Terbit')
             ->assertSee('Profil Tanpa Alamat');
     }
 

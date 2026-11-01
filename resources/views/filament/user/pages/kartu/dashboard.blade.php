@@ -108,7 +108,7 @@
 
     @include('filament.user.pages.kartu.dashboard-kesehatan', ['daftarKesehatan' => $kesehatan['daftar']])
     @include('filament.user.pages.kartu.dashboard-aktivitas', ['aktivitas' => $aktivitas])
-    @include('filament.user.pages.kartu.dashboard-linktree', ['statistik' => $linktreeStatistik])
+    @include('filament.user.pages.kartu.dashboard-bio', ['statistik' => $bioStatistik])
 
     @if ($tautanTerpopuler)
         <div class="statistik__populer">

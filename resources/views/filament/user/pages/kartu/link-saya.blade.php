@@ -3,12 +3,12 @@
 
     Kartu ini bisa dilipat dan keadaannya disimpan lewat aksi lipatTautan supaya
     tetap terbuka atau tertutup setelah aksi Livewire berikutnya. Tiap baris ada
-    di partial kartu/baris-tautan.blade.php: memuat centang "tampil di Linktree"
+    di partial kartu/baris-tautan.blade.php: memuat centang "tampil di Link in Bio"
     serta aksi salin, QR, sunting, dan hapus. Semua tombol di dalam formulir ini
     bertipe `button` supaya klik aksi tidak ikut mengirim formulir pemilihan
-    Linktree.
+    Link in Bio.
 --}}
-<section class="kartu" id="kartu-linktree" data-hook="kartu-linktree">
+<section class="kartu" id="kartu-bio" data-hook="kartu-bio">
     <header class="kartu__kepala">
         <h2 class="kartu__judul">{{ __('ui.panel.link_saya') }}</h2>
         <span class="kartu__urut">03</span>
@@ -81,7 +81,7 @@
         @endif
 
         {{-- Formulir status terbit dengan toggle switch --}}
-        <form wire:submit="simpanLinktree">
+        <form wire:submit="simpanBio">
             <div class="toggle-status">
                 <span class="toggle-status__label">{{ __('ui.panel.status_halaman_publik') }}</span>
                 <button type="button" class="toggle-status__switch"
@@ -95,9 +95,9 @@
             </div>
 
             <button type="submit" class="tombol-utama" wire:loading.attr="disabled"
-                    wire:target="simpanLinktree">
-                <span wire:loading.remove wire:target="simpanLinktree">{{ __('ui.panel.simpan_pilihan') }}</span>
-                <span wire:loading wire:target="simpanLinktree">{{ __('ui.panel.menyimpan') }}</span>
+                    wire:target="simpanBio">
+                <span wire:loading.remove wire:target="simpanBio">{{ __('ui.panel.simpan_pilihan') }}</span>
+                <span wire:loading wire:target="simpanBio">{{ __('ui.panel.menyimpan') }}</span>
                 <x-ikon nama="cek" />
             </button>
         </form>

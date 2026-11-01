@@ -35,8 +35,8 @@ class AdminDashboardService
             'klik_periode' => ClickEvent::whereBetween('created_at', [$awal, $akhir])->count(),
             'klik_sebelum' => ClickEvent::whereBetween('created_at', [$awalSebelum, $akhirSebelum])->count(),
             'klik_hari_ini' => ClickEvent::whereDate('created_at', today())->count(),
-            'linktree_terbit' => DB::table('linktree_profiles')->where('is_active', true)->count(),
-            'tanpa_alamat' => DB::table('linktree_profiles')->where('is_active', true)->whereNull('public_slug')->count(),
+            'bio_terbit' => DB::table('bio_profiles')->where('is_active', true)->count(),
+            'tanpa_alamat' => DB::table('bio_profiles')->where('is_active', true)->whereNull('public_slug')->count(),
         ];
     }
 

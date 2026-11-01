@@ -15,8 +15,9 @@ use App\Http\Controllers\Auth\ShowLocalLoginController;
 use App\Http\Controllers\Auth\ShowResetPasswordController;
 use App\Http\Controllers\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\LinkExportController;
-use App\Http\Controllers\LinktreeClickController;
-use App\Http\Controllers\LinktreeController;
+use App\Http\Controllers\BioClickController;
+use App\Http\Controllers\BioController;
+use App\Http\Controllers\LegalController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PublicShortUrlController;
@@ -36,12 +37,15 @@ Route::get('/robots.txt', fn () => response()->view('robots')->header('Content-T
 Route::post('/shorten', [PublicShortUrlController::class, 'store'])
     ->middleware(['throttle:pembuatan-tautan', EnsurePublicAccessAllowed::class])
     ->name('shorten.public');
-// Alamat publik Linktree memakai slug pilihan pemiliknya, bukan username login.
-Route::get('/u/{alamat}', [LinktreeController::class, 'show'])->name('linktree.show');
-Route::get('/u/{alamat}/klik/{tautan}', LinktreeClickController::class)
+// Alamat publik Bio memakai slug pilihan pemiliknya, bukan username login.
+Route::get('/u/{alamat}', [BioController::class, 'show'])->name('bio.show');
+Route::get('/u/{alamat}/klik/{tautan}', BioClickController::class)
     ->middleware('throttle:120,1')
-    ->name('linktree.click');
+    ->name('bio.click');
 Route::get('/qr/{slug}', [QrCodeController::class, 'show'])->name('qr.show');
+Route::get('/tentang-saya', [LegalController::class, 'tentang'])->name('legal.tentang');
+Route::get('/syarat-ketentuan', [LegalController::class, 'syarat'])->name('legal.syarat');
+Route::get('/kebijakan-privasi', [LegalController::class, 'privasi'])->name('legal.privasi');
 // Pilihan bahasa tamu disimpan di sesinya sendiri; pengguna masuk di kolom
 // `users.locale` miliknya (lihat LocaleService).
 Route::post('/bahasa', LocaleController::class)->middleware('throttle:30,1')->name('bahasa.ganti');
