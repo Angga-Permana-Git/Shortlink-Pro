@@ -8,7 +8,10 @@ use App\Models\AuditLog;
 use BackedEnum;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
@@ -78,6 +81,44 @@ class AuditLogResource extends Resource
             ])
             ->actions([
                 ViewAction::make(),
+            ]);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema
+            ->schema([
+                Section::make(__('Rincian Log Audit'))
+                    ->schema([
+                        TextEntry::make('id')->label(__('ID')),
+                        TextEntry::make('actor.name')
+                            ->label(__('Aktor'))
+                            ->placeholder(__('Sistem')),
+                        TextEntry::make('action')
+                            ->label(__('Aksi'))
+                            ->badge()
+                            ->color('primary'),
+                        TextEntry::make('resource_type')
+                            ->label(__('Jenis Sumber'))
+                            ->placeholder(__('-')),
+                        TextEntry::make('resource_id')
+                            ->label(__('ID Sumber'))
+                            ->placeholder(__('-')),
+                        TextEntry::make('metadata')
+                            ->label(__('Detail'))
+                            ->formatStateUsing(fn ($state): string => filled($state)
+                                ? json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+                                : __('Tidak ada'))
+                            ->columnSpanFull(),
+                        TextEntry::make('ip_address')
+                            ->label(__('Alamat IP'))
+                            ->placeholder(__('Tidak ada')),
+                        TextEntry::make('created_at')
+                            ->label(__('Waktu'))
+                            ->dateTime(),
+                    ])
+                    ->columns(2)
+                    ->columnSpanFull(),
             ]);
     }
 

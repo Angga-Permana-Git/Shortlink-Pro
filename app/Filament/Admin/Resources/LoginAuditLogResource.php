@@ -8,7 +8,10 @@ use App\Models\LoginAuditLog;
 use BackedEnum;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
@@ -85,6 +88,60 @@ class LoginAuditLogResource extends Resource
             ])
             ->actions([
                 ViewAction::make(),
+            ]);
+    }
+
+    public static function infolist(Schema $schema): Schema
+    {
+        return $schema
+            ->schema([
+                Section::make(__('Rincian Log Masuk'))
+                    ->schema([
+                        TextEntry::make('user.name')
+                            ->label(__('Pengguna'))
+                            ->placeholder(__('Tidak diketahui')),
+                        TextEntry::make('username')
+                            ->label(__('Nama Pengguna'))
+                            ->placeholder(__('-')),
+                        TextEntry::make('auth_provider')
+                            ->label(__('Penyedia'))
+                            ->badge()
+                            ->formatStateUsing(fn (?string $state): string => match ($state) {
+                                'local' => __('Lokal'),
+                                'keycloak' => 'Keycloak',
+                                default => $state ?? __('-'),
+                            })
+                            ->color(fn (?string $state): string => match ($state) {
+                                'keycloak' => 'success',
+                                'local' => 'primary',
+                                default => 'gray',
+                            }),
+                        TextEntry::make('status')
+                            ->label(__('Status'))
+                            ->badge()
+                            ->formatStateUsing(fn (?string $state): string => match ($state) {
+                                'success' => __('Berhasil'),
+                                'failed' => __('Gagal'),
+                                default => $state ?? __('-'),
+                            })
+                            ->color(fn (?string $state): string => match ($state) {
+                                'success' => 'success',
+                                'failed' => 'danger',
+                                default => 'gray',
+                            }),
+                        TextEntry::make('ip_address')
+                            ->label(__('Alamat IP'))
+                            ->placeholder(__('-')),
+                        TextEntry::make('user_agent')
+                            ->label(__('Perangkat'))
+                            ->placeholder(__('Tidak ada'))
+                            ->columnSpanFull(),
+                        TextEntry::make('created_at')
+                            ->label(__('Waktu'))
+                            ->dateTime(),
+                    ])
+                    ->columns(2)
+                    ->columnSpanFull(),
             ]);
     }
 
