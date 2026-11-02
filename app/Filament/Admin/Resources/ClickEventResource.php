@@ -34,7 +34,10 @@ class ClickEventResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('shortUrl.slug')->label(__('Tautan Pendek'))->searchable()
-                    ->url(fn (ClickEvent $record) => route('redirect.show', $record->shortUrl->slug)),
+                    ->placeholder(__('Tautan dihapus'))
+                    ->url(fn (ClickEvent $record) => filled($record->shortUrl?->slug)
+                        ? route('redirect.show', $record->shortUrl->slug)
+                        : null),
                 TextColumn::make('status')->badge()->label(__('Status'))
                     ->color(fn ($state) => $state === ClickStatus::Success->value ? 'success' : 'danger'),
                 TextColumn::make('ip_hash')->label(__('IP (hash)'))->limit(20),

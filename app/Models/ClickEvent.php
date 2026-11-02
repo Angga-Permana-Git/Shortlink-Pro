@@ -22,6 +22,8 @@ class ClickEvent extends Model
 
     public function shortUrl(): BelongsTo
     {
-        return $this->belongsTo(ShortUrl::class);
+        // Log klik harus tetap menampilkan slug walau tautannya dihapus
+        // sementara (soft delete) oleh pemiliknya.
+        return $this->belongsTo(ShortUrl::class)->withTrashed();
     }
 }
