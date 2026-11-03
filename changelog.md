@@ -43,6 +43,15 @@ Migrasi
 
 ---
 
+[2026-11-04] Koreksi 500 /admin/short-urls (helperText Filter)
+
+Diperbaiki
+- Hapus `->helperText(...)` pada `Filter::make('mati')` di tabel tautan admin.
+- **Akar masalah:** `Filament\Tables\Filters\Filter` tidak punya metode `helperText` (hanya komponen form yang punya), sehingga halaman `/admin/short-urls` 500 dengan `BadMethodCallException: Method Filter::helperText does not exist`. Filter lain (dibuat, kedaluwarsa_7, lintas_zona, tanggal) tidak memakai `helperText`, jadi konsisten kembali.
+
+**Berkas:** `app/Filament/Admin/Resources/ShortUrlResource/Concerns/TabelTautan.php`
+**Verifikasi:** `php -l` lolos; `pint --test` passed; `php artisan test AdminShortUrlToolsTest+AdminBlocklistDeadPurgeTest` 8 passed (48 assertions).
+
 [2026-11-04] Keamanan publik P0 + samakan background halaman password
 
 Ditambahkan
