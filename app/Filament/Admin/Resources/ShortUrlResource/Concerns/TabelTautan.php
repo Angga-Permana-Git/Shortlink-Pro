@@ -97,7 +97,6 @@ trait TabelTautan
                     ->query(fn (Builder $query) => $query->where('is_active', true)->whereBetween('expires_at', [now(), now()->addDays(7)])),
                 Filter::make('mati')
                     ->label(__('Tautan mati'))
-                    ->helperText(__('Aktif tanpa klik sukses 90 hari atau kedaluwarsa ≤7 hari.'))
                     ->query(fn (Builder $query) => $query
                         ->where('is_active', true)
                         ->where(fn (Builder $q) => $q
