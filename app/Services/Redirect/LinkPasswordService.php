@@ -15,9 +15,9 @@ use Illuminate\Support\Facades\RateLimiter;
  */
 class LinkPasswordService
 {
-    public function verify(ShortUrl $shortUrl, string $password): LinkAccessStatus
+    public function verify(ShortUrl $shortUrl, string $password, ?string $ipAddress = null): LinkAccessStatus
     {
-        $key = $this->attemptKey($shortUrl);
+        $key = $this->attemptKey($shortUrl, $ipAddress);
         $maxAttempts = (int) config('pemendek.password_max_attempts', 5);
         $lockSeconds = (int) config('pemendek.password_lock_seconds', 60);
 
@@ -36,8 +36,10 @@ class LinkPasswordService
         return LinkAccessStatus::Ready;
     }
 
-    private function attemptKey(ShortUrl $shortUrl): string
+    private function attemptKey(ShortUrl $shortUrl, ?string $ipAddress = null): string
     {
-        return 'shortlink-password:'.$shortUrl->id;
+        // Kunci per tautan + IP agar satu IP yang menebak tidak mengunci
+        // pengunjung sah lain, dan satu penyerang tidak memblokir semua orang.
+        return 'shortlink-password:'.$shortUrl->id.':'.($ipAddress ?? 'tanpa-ip');
     }
 }

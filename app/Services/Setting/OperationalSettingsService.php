@@ -8,8 +8,9 @@ use App\Services\Audit\AuditLogger;
 
 /**
  * Pengaturan operasional yang memengaruhi pembuatan tautan, retensi log,
- * pembatasan laju, dan pengumuman. Semua nilai dibaca lewat kelas ini agar
- * formulir admin dan pemakai di lapisan lain tidak menyimpang.
+ * pembatasan laju, pengumuman, dan domain yang diblokir. Semua nilai dibaca
+ * lewat kelas ini agar formulir admin dan pemakai di lapisan lain tidak
+ * menyimpang.
  */
 class OperationalSettingsService
 {
@@ -49,6 +50,43 @@ class OperationalSettingsService
         $teks = trim((string) Setting::get('announcement_banner', ''));
 
         return $teks === '' ? null : $teks;
+    }
+
+    /** @return array<int, string> */
+    public function blockedDomains(): array
+    {
+        $nilai = Setting::get('blocked_domains', []);
+
+        if (! is_array($nilai)) {
+            $nilai = preg_split('/[\s,]+/', (string) $nilai) ?: [];
+        }
+
+        return collect($nilai)
+            ->map(fn ($domain): string => $this->normalisasiDomain((string) $domain))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    private function normalisasiDomain(string $mentah): string
+    {
+        $mentah = mb_strtolower(trim($mentah));
+
+        if ($mentah === '') {
+            return '';
+        }
+
+        if (str_contains($mentah, '://')) {
+            $host = (string) parse_url($mentah, PHP_URL_HOST);
+            $mentah = $host !== '' ? $host : $mentah;
+        }
+
+        $mentah = ltrim($mentah, '*.');
+        $mentah = rtrim($mentah, '.');
+        $mentah = (string) preg_replace('/:\d+$/', '', $mentah);
+
+        return $mentah;
     }
 
     /** @return array<int, string> */
@@ -112,12 +150,34 @@ class OperationalSettingsService
     {
         return [
             'reserved_slugs' => implode(PHP_EOL, $this->reservedSlugs()),
+            'blocked_domains' => implode(PHP_EOL, $this->blockedDomains()),
             'default_expiry_days' => $this->defaultExpiryDays(),
             'log_retention_days' => $this->logRetentionDays(),
             'rate_limit_per_minute' => $this->rateLimitPerMinute(),
             'announcement_banner' => $this->announcementBanner(),
             'admin_ip_allowlist' => implode(PHP_EOL, $this->adminIpAllowlist()),
         ];
+    }
+
+    /**
+     * Normalisasi daftar mentah menjadi daftar domain bersih yang siap simpan.
+     *
+     * @return array<int, string>
+     */
+    public function normalisasiDaftarDomain(mixed $mentah): array
+    {
+        if (is_array($mentah)) {
+            $potongan = $mentah;
+        } else {
+            $potongan = preg_split('/[\s,]+/', (string) $mentah) ?: [];
+        }
+
+        return collect($potongan)
+            ->map(fn ($domain): string => $this->normalisasiDomain((string) $domain))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 
     /**
@@ -133,6 +193,9 @@ class OperationalSettingsService
             ->all();
 
         Setting::set('reserved_slugs', $reserved);
+
+        $blokir = $this->normalisasiDaftarDomain($data['blocked_domains'] ?? []);
+        Setting::set('blocked_domains', $blokir);
         Setting::set('default_expiry_days', max(0, (int) ($data['default_expiry_days'] ?? 0)));
         Setting::set('log_retention_days', max(1, (int) ($data['log_retention_days'] ?? 90)));
         Setting::set('rate_limit_per_minute', max(1, (int) ($data['rate_limit_per_minute'] ?? 10)));
@@ -154,6 +217,7 @@ class OperationalSettingsService
             'log_retention_days' => max(1, (int) ($data['log_retention_days'] ?? 90)),
             'rate_limit_per_minute' => max(1, (int) ($data['rate_limit_per_minute'] ?? 10)),
             'admin_ip_allowlist' => count($ip),
+            'blocked_domains' => count($blokir),
         ]);
     }
 }

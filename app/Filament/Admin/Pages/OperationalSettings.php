@@ -2,8 +2,11 @@
 
 namespace App\Filament\Admin\Pages;
 
+use App\Services\Audit\AuditLogger;
+use App\Services\Setting\LogPurgeService;
 use App\Services\Setting\OperationalSettingsService;
 use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -46,6 +49,10 @@ class OperationalSettings extends Page
                     ->label(__('Nama pendek yang dicadangkan'))
                     ->rows(4)
                     ->helperText(__('Satu nama per baris atau pisahkan dengan koma. Nama ini tidak dapat dipakai pengguna.')),
+                Textarea::make('blocked_domains')
+                    ->label(__('Domain tujuan yang diblokir'))
+                    ->rows(3)
+                    ->helperText(__('Satu domain per baris (contoh phishing.test). Subdomain ikut diblokir. Tanpa kunci API pun tetap menolak.')),
                 TextInput::make('default_expiry_days')
                     ->label(__('Kedaluwarsa bawaan (hari)'))
                     ->numeric()
@@ -84,6 +91,59 @@ class OperationalSettings extends Page
         $this->refreshForm();
 
         Notification::make()->success()->title(__('Pengaturan operasional tersimpan'))->send();
+    }
+
+    /**
+     * @return array<int, Action>
+     */
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('pratinjau_purge')
+                ->label(__('Pratinjau Pembersihan'))
+                ->icon(Heroicon::OutlinedEye)
+                ->modalHeading(__('Pratinjau pembersihan log'))
+                ->modalDescription(fn (): string => $this->ringkasanPurge())
+                ->action(fn () => $this->tampilkanPurge()),
+            Action::make('bersihkan_log')
+                ->label(__('Bersihkan Log'))
+                ->icon(Heroicon::OutlinedTrash)
+                ->requiresConfirmation()
+                ->modalHeading(__('Bersihkan log lama?'))
+                ->modalDescription(fn (): string => $this->ringkasanPurge())
+                ->action(fn () => $this->bersihkanLog()),
+        ];
+    }
+
+    private function ringkasanPurge(): string
+    {
+        $hasil = app(LogPurgeService::class)->pratinjau();
+
+        return __(':total log lebih lama dari :hari hari (audit :audit, masuk :masuk, klik :klik, peran :peran) akan dihapus.', $hasil);
+    }
+
+    private function tampilkanPurge(): void
+    {
+        Notification::make()->success()->title(__('Pratinjau pembersihan'))->body($this->ringkasanPurge())->send();
+    }
+
+    private function bersihkanLog(): void
+    {
+        $hasil = app(LogPurgeService::class)->bersihkan();
+
+        AuditLogger::log(auth()->user(), 'settings.logs.purge', 'setting', null, [
+            'hari' => $hasil['hari'],
+            'audit' => $hasil['audit'],
+            'masuk' => $hasil['masuk'],
+            'klik' => $hasil['klik'],
+            'peran' => $hasil['peran'],
+        ]);
+
+        Notification::make()
+            ->success()
+            ->title(__('Pembersihan selesai'))
+            ->body(__('Audit :audit, masuk :masuk, klik :klik, dan peran :peran dihapus.', $hasil))
+            ->send();
     }
 
     private function refreshForm(): void

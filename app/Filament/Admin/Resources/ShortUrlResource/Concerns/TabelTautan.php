@@ -95,6 +95,22 @@ trait TabelTautan
                 Filter::make('kedaluwarsa_7')
                     ->label(__('Kedaluwarsa ≤7 hari'))
                     ->query(fn (Builder $query) => $query->where('is_active', true)->whereBetween('expires_at', [now(), now()->addDays(7)])),
+                Filter::make('mati')
+                    ->label(__('Tautan mati'))
+                    ->helperText(__('Aktif tanpa klik sukses 90 hari atau kedaluwarsa ≤7 hari.'))
+                    ->query(fn (Builder $query) => $query
+                        ->where('is_active', true)
+                        ->where(fn (Builder $q) => $q
+                            ->where(fn (Builder $sub) => $sub
+                                ->where('total_clicks', 0)
+                                ->where('created_at', '<', now()->subDays(90))
+                                ->whereDoesntHave('clicks', fn (Builder $klik) => $klik->where('status', 'success')))
+                            ->orWhere(fn (Builder $sub) => $sub
+                                ->where('last_clicked_at', '<', now()->subDays(90))
+                                ->whereDoesntHave('clicks', fn (Builder $klik) => $klik
+                                    ->where('status', 'wrong_password')
+                                    ->where('created_at', '>=', now()->subDays(90))))
+                            ->orWhereBetween('expires_at', [now(), now()->addDays(7)]))),
                 Filter::make('lintas_zona')
                     ->label(__('Pemilik lintas zona waktu'))
                     ->query(fn (Builder $query) => $query->whereHas('owner', fn (Builder $q) => $q

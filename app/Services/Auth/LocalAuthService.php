@@ -30,7 +30,7 @@ class LocalAuthService
 
     public function attempt(string $identifier, string $password, RequestContextDTO $context): LoginOutcome
     {
-        $key = $this->attemptKey($identifier);
+        $key = $this->attemptKey($identifier, $context->ipAddress);
 
         if (RateLimiter::tooManyAttempts($key, self::MAX_ATTEMPTS)) {
             return LoginOutcome::TooManyAttempts;
@@ -60,8 +60,10 @@ class LocalAuthService
         return LoginOutcome::Success;
     }
 
-    private function attemptKey(string $identifier): string
+    private function attemptKey(string $identifier, ?string $ipAddress = null): string
     {
-        return 'local-login:'.strtolower(trim($identifier));
+        // Kunci per identitas + IP agar penyerang tidak bisa menghindari batas
+        // dengan rotasi username, dan korban tidak terkunci oleh IP lain.
+        return 'local-login:'.strtolower(trim($identifier)).':'.($ipAddress ?? 'tanpa-ip');
     }
 }

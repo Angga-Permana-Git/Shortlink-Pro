@@ -14,10 +14,10 @@ use App\Http\Controllers\Auth\ShowForgotPasswordController;
 use App\Http\Controllers\Auth\ShowLocalLoginController;
 use App\Http\Controllers\Auth\ShowResetPasswordController;
 use App\Http\Controllers\Auth\TwoFactorChallengeController;
-use App\Http\Controllers\LinkExportController;
 use App\Http\Controllers\BioClickController;
 use App\Http\Controllers\BioController;
 use App\Http\Controllers\LegalController;
+use App\Http\Controllers\LinkExportController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\LoginController;
 use App\Http\Controllers\PublicShortUrlController;
@@ -30,22 +30,27 @@ use App\Http\Middleware\EnsurePublicAccessAllowed;
 use App\Http\Middleware\EnsureUserIsAdmin;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', [LoginController::class, 'show'])->middleware(EnsurePublicAccessAllowed::class);
-Route::get('/login', [LoginController::class, 'show'])->name('login');
-Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
-Route::get('/robots.txt', fn () => response()->view('robots')->header('Content-Type', 'text/plain; charset=utf-8'));
+Route::get('/', [LoginController::class, 'show'])
+    ->middleware(['throttle:60,1', EnsurePublicAccessAllowed::class]);
+Route::get('/login', [LoginController::class, 'show'])->middleware('throttle:30,1')->name('login');
+Route::get('/sitemap.xml', SitemapController::class)->middleware('throttle:60,1')->name('sitemap');
+Route::get('/robots.txt', fn () => response()->view('robots')->header('Content-Type', 'text/plain; charset=utf-8'))->middleware('throttle:60,1');
 Route::post('/shorten', [PublicShortUrlController::class, 'store'])
     ->middleware(['throttle:pembuatan-tautan', EnsurePublicAccessAllowed::class])
     ->name('shorten.public');
 // Alamat publik Bio memakai slug pilihan pemiliknya, bukan username login.
-Route::get('/u/{alamat}', [BioController::class, 'show'])->name('bio.show');
+Route::get('/u/{alamat}', [BioController::class, 'show'])
+    ->middleware(['throttle:60,1', EnsurePublicAccessAllowed::class])
+    ->name('bio.show');
 Route::get('/u/{alamat}/klik/{tautan}', BioClickController::class)
-    ->middleware('throttle:120,1')
+    ->middleware(['throttle:120,1', EnsurePublicAccessAllowed::class])
     ->name('bio.click');
-Route::get('/qr/{slug}', [QrCodeController::class, 'show'])->name('qr.show');
-Route::get('/tentang-saya', [LegalController::class, 'tentang'])->name('legal.tentang');
-Route::get('/syarat-ketentuan', [LegalController::class, 'syarat'])->name('legal.syarat');
-Route::get('/kebijakan-privasi', [LegalController::class, 'privasi'])->name('legal.privasi');
+Route::get('/qr/{slug}', [QrCodeController::class, 'show'])
+    ->middleware(['throttle:60,1', EnsurePublicAccessAllowed::class])
+    ->name('qr.show');
+Route::get('/tentang-saya', [LegalController::class, 'tentang'])->middleware('throttle:60,1')->name('legal.tentang');
+Route::get('/syarat-ketentuan', [LegalController::class, 'syarat'])->middleware('throttle:60,1')->name('legal.syarat');
+Route::get('/kebijakan-privasi', [LegalController::class, 'privasi'])->middleware('throttle:60,1')->name('legal.privasi');
 // Pilihan bahasa tamu disimpan di sesinya sendiri; pengguna masuk di kolom
 // `users.locale` miliknya (lihat LocaleService).
 Route::post('/bahasa', LocaleController::class)->middleware('throttle:30,1')->name('bahasa.ganti');
@@ -57,12 +62,14 @@ Route::middleware('guest')->group(function () {
     Route::get('/auth/google/callback', HandleGoogleCallbackController::class)->name('google.callback');
     Route::get('/login/local', ShowLocalLoginController::class)->name('login.local');
     Route::post('/login/local', AuthenticateLocalController::class)->middleware('throttle:5,1');
-    Route::get('/register', [RegisterController::class, 'create'])->name('register');
-    Route::post('/register', [RegisterController::class, 'store'])->middleware('throttle:5,1')->name('register.store');
-    Route::get('/forgot-password', ShowForgotPasswordController::class)->name('password.request');
-    Route::post('/forgot-password', SendPasswordResetLinkController::class)->middleware('throttle:5,1')->name('password.email');
-    Route::get('/reset-password/{token}', ShowResetPasswordController::class)->name('password.reset');
-    Route::post('/reset-password', SaveNewPasswordController::class)->middleware('throttle:5,1')->name('password.update');
+    // Pendaftaran akun lokal dan reset kata sandi ditutup saat mode wajib SSO
+    // aktif; login lokal darurat tetap dibuka agar admin tidak terkunci.
+    Route::get('/register', [RegisterController::class, 'create'])->middleware(EnsurePublicAccessAllowed::class)->name('register');
+    Route::post('/register', [RegisterController::class, 'store'])->middleware(['throttle:5,1', EnsurePublicAccessAllowed::class])->name('register.store');
+    Route::get('/forgot-password', ShowForgotPasswordController::class)->middleware(EnsurePublicAccessAllowed::class)->name('password.request');
+    Route::post('/forgot-password', SendPasswordResetLinkController::class)->middleware(['throttle:5,1', EnsurePublicAccessAllowed::class])->name('password.email');
+    Route::get('/reset-password/{token}', ShowResetPasswordController::class)->middleware(EnsurePublicAccessAllowed::class)->name('password.reset');
+    Route::post('/reset-password', SaveNewPasswordController::class)->middleware(['throttle:5,1', EnsurePublicAccessAllowed::class])->name('password.update');
 });
 
 Route::middleware('auth')->group(function () {

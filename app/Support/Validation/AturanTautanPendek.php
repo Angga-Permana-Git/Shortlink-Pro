@@ -28,9 +28,10 @@ final class AturanTautanPendek
      *
      * `$pindaiTujuan` dimatikan oleh pengimpor CSV: pemeriksaan Safe Browsing
      * memanggil layanan luar per baris, sedangkan impor bisa mencapai ribuan
-     * baris dan dibatasi kuota serta waktu proses.
+     * baris dan dibatasi kuota serta waktu proses. Blocklist domain lokal
+     * (`DomainDiblokir`) tetap dipakai karena murni lokal tanpa panggilan luar.
      *
-     * @return array<string, array<int, string|TautanAman>>
+     * @return array<string, array<int, string|TautanAman|DomainDiblokir|Closure>>
      */
     public static function semua(string $awalan = '', bool $pindaiTujuan = true): array
     {
@@ -39,6 +40,7 @@ final class AturanTautanPendek
                 'required',
                 'url:http,https',
                 'max:'.self::PANJANG_URL_MAKS,
+                new DomainDiblokir,
                 ...($pindaiTujuan ? [new TautanAman] : []),
             ],
             $awalan.'slug' => [
@@ -75,7 +77,7 @@ final class AturanTautanPendek
      * Tujuan tetap diperiksa ulang: tanpa itu tautan yang sudah aman bisa
      * dialihkan ke alamat berbahaya setelah dibuat.
      *
-     * @return array<string, array<int, string|TautanAman>>
+     * @return array<string, array<int, string|TautanAman|DomainDiblokir>>
      */
     public static function perubahan(string $awalan = ''): array
     {
@@ -84,6 +86,7 @@ final class AturanTautanPendek
                 'required',
                 'url:http,https',
                 'max:'.self::PANJANG_URL_MAKS,
+                new DomainDiblokir,
                 new TautanAman,
             ],
             $awalan.'is_active' => ['boolean'],

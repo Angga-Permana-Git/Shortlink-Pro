@@ -8,7 +8,7 @@
     align-items: center;
     justify-content: center;
     padding: var(--jarak-5);
-    background: var(--gradien-latar);
+    background: var(--gradien-smart);
 }
 
 .tautan {

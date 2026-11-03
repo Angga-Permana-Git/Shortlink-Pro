@@ -7,6 +7,7 @@ use chillerlan\QRCode\Common\EccLevel;
 use chillerlan\QRCode\Output\QROutputInterface;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 /**
  * Pembuat QR Code sisi server.
@@ -39,6 +40,13 @@ class QrCodeService
     public function svgUntukSlug(string $slug): string
     {
         $shortUrl = ShortUrl::query()->where('slug', $slug)->firstOrFail();
+
+        // QR tidak membocorkan keberadaan tautan nonaktif/kedaluwarsa/belum
+        // mulai; pengunjung tetap melihat 404 seperti membuka slug langsung.
+        // Tautan ber-kata sandi tetap boleh: QR mengarah ke formulir sandi.
+        if (! $shortUrl->is_active || $shortUrl->isExpired() || $shortUrl->notStarted()) {
+            throw new ModelNotFoundException;
+        }
 
         return $this->svg($shortUrl->shortUrl());
     }

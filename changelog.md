@@ -43,6 +43,55 @@ Migrasi
 
 ---
 
+[2026-11-04] Keamanan publik P0 + samakan background halaman password
+
+Ditambahkan
+- QR tautan nonaktif/kedaluwarsa/terjadwal kini 404 (tidak membocorkan existensi) lewat cek status di `QrCodeService`.
+- Kunci percobaan kata sandi dan login lokal kini per identitas+IP (tidak bisa dikunci massal satu IP/global).
+- `keycloak_state` memakai `Str::random(40)` (tidak lagi bisa ditebak dari `uniqid`).
+- Throttle rute publik (`/`, `/bio`, `/qr`, `/legal`, `/sitemap.xml`, `/robots.txt`) 60/menit.
+- Pendaftaran/lupa/reset ditutup saat `force_sso` aktif (login lokal darurat tetap buka).
+- Slug cadangan diperluas: `u,qr,api,user,admin,login,register,forgot-password,reset-password,auth,bahasa,sitemap.xml,robots.txt,tentang`.
+
+Diubah
+- Background halaman status tautan (termasuk form password) dari gradien navy gelap menjadi gradien terang, sama dengan beranda.
+- **Alasan:** permintaan pengguna (m02422); modal dan kolom input sudah rapih, yang belum konsisten hanya background.
+
+**Berkas:** `app/Services/QrCode/QrCodeService.php`, `app/Services/Redirect/LinkPasswordService.php`, `app/Services/Redirect/LinkAccessService.php`, `app/Services/Auth/LocalAuthService.php`, `app/Http/Controllers/Auth/RedirectToKeycloakController.php`, `app/Http/Controllers/LegalController.php`, `routes/web.php`, `resources/css/publik/tautan.css`
+**Verifikasi:** `php -l` 14 berkas lolos; `pint --test` passed; `php artisan test AdminBlocklistDeadPurgeTest+PublicShortUrlTest+SeoFondasiTest` 21 passed (91 assertions); `npm run build` ✓ 10.59s.
+
+[2026-11-04] PRD fleksibel publik/internal (SSO tetap)
+
+Diubah
+- Tujuan produk: satu instalasi bisa dipakai mode publik maupun internal lewat saklar `force_sso`; Keycloak/SSO dipertahankan di kedua mode.
+- **Alasan:** permintaan pengguna (m01150); aplikasi harus fleksibel tanpa membingungkan pembaca PRD.
+
+**Berkas:** `PRDapp.md`
+**Verifikasi:** baca ulang `PRDapp.md` bagian 1, 3.1, 3.5, 3.6, dan keputusan No.1.
+
+[2026-11-04] PRD menjadi layanan publik
+
+Diubah
+- Tujuan produk di `PRDapp.md` dari layanan internal jaringan perusahaan menjadi layanan publik yang bisa dipakai siapa pun di internet.
+- **Alasan:** permintaan pengguna (m01118); lampiran keputusan: `force_sso` default nonaktif agar beranda/API publik langsung bisa dipakai, pendaftaran lokal tetap terbuka.
+
+**Berkas:** `PRDapp.md`
+**Verifikasi:** baca ulang `PRDapp.md:10-17`; belum ada perubahan kode.
+
+[2026-11-04] Kelengkapan admin 1-5: blocklist domain, filter mati, purge manual
+
+Ditambahkan
+- `blocked_domains` di pengaturan operasional + aturan `DomainDiblokir` (subdomain ikut ditolak, tetap berlaku saat impor CSV).
+- Filter `Tautan mati` di tabel tautan admin (tanpa klik sukses 90 hari atau kedaluwarsa ≤7 hari).
+- Aksi `Pratinjau Pembersihan` dan `Bersihkan Log` di Pengaturan Operasional lewat `LogPurgeService`.
+- `tests/Feature/AdminBlocklistDeadPurgeTest.php` (4 test).
+- **Alasan:** menutup celah phishing tanpa kunci API, menemukan tautan tak terpakai, dan memberi jalan manual pembersihan log tanpa CLI.
+
+**Berkas:** `app/Services/Setting/OperationalSettingsService.php`, `app/Support/Validation/DomainDiblokir.php`, `app/Support/Validation/AturanTautanPendek.php`, `app/Filament/Admin/Pages/OperationalSettings.php`, `app/Services/Setting/LogPurgeService.php`, `app/Filament/Admin/Resources/ShortUrlResource/Concerns/TabelTautan.php`, `tests/Feature/AdminBlocklistDeadPurgeTest.php`, `.aicontext/activetodo.md`, `.aicontext/coredependencies.md`
+**Verifikasi:** `pint --test` passed pada 7 berkas tersentuh; `php artisan test AdminBlocklistDeadPurgeTest+AdminOperationalSettingsTest+AdminModerationTest` 13 passed (57 assertions); `pint` full repo masih gagal pada berkas lama yang tidak tersentuh.
+
+---
+
 [2026-10-28] Hentikan `URL::forceScheme('https')` pada request HTTP (aset https di halaman http)
 
 ⚠️ Perlu Perhatian

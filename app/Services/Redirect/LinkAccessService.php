@@ -47,7 +47,7 @@ class LinkAccessService
             return $this->logClick($shortUrl, $status, $context);
         }
 
-        return $this->logClick($shortUrl, $this->passwords->verify($shortUrl, $password), $context);
+        return $this->logClick($shortUrl, $this->passwords->verify($shortUrl, $password, $context->ipAddress), $context);
     }
 
     /**

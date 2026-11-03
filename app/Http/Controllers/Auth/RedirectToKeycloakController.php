@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\Auth\KeycloakAuthService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 use Laravel\Socialite\Facades\Socialite;
 
 /**
@@ -21,7 +22,7 @@ class RedirectToKeycloakController extends Controller
             ]);
         }
 
-        $request->session()->put('keycloak_state', uniqid('', true));
+        $request->session()->put('keycloak_state', Str::random(40));
 
         return Socialite::driver('keycloak')->redirect();
     }

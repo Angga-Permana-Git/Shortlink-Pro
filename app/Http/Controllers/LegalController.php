@@ -20,12 +20,30 @@ class LegalController extends Controller
      * Slug halaman legal yang otomatis dicadangkan dari pemakaian
      * sebagai nama pendek tautan.
      *
+     * Berisi halaman legal plus awalan rute publik agar catch-all {slug}
+     * tidak membayangi rute nyata (`/u`, `/qr`, `/api`, `/user`,
+     * `/admin`, dsb).
+     *
      * @var array<int, string>
      */
     public const SLUG_DICADANGKAN = [
         'tentang-saya',
         'syarat-ketentuan',
         'kebijakan-privasi',
+        'u',
+        'qr',
+        'api',
+        'user',
+        'admin',
+        'login',
+        'register',
+        'forgot-password',
+        'reset-password',
+        'auth',
+        'bahasa',
+        'sitemap.xml',
+        'robots.txt',
+        'tentang',
     ];
 
     public function tentang(): View

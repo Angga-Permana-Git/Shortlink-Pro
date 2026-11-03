@@ -9,7 +9,7 @@ Dokumen ini adalah sumber kebenaran untuk **apa** yang dibangun dan **untuk siap
 
 ## 1. Tujuan produk
 
-Shortlink Pro adalah layanan pemendek tautan internal yang dipasang di jaringan perusahaan. Tujuan utamanya:
+Shortlink Pro adalah layanan pemendek tautan yang fleksibel: bisa dijalankan sebagai layanan **publik** yang terbuka ke internet, maupun sebagai layanan **internal** yang tertutup di jaringan perusahaan. Mode dipilih lewat satu saklar `force_sso` tanpa mengubah kode. Tujuan utamanya:
 
 1. **Memendekkan tautan** yang panjang menjadi tautan pendek yang mudah dibagikan, dengan pilihan slug kustom, masa berlaku, dan kata sandi.
 2. **Memberi satu halaman tautan (Bio)** untuk setiap pengguna, agar beberapa tautan penting bisa dibagikan lewat satu alamat publik.
@@ -32,7 +32,7 @@ Peran disimpan di kolom `users.role` dan hanya boleh diubah oleh Admin; setiap p
 
 ### 3.1 Pemendekan tautan publik (`/`)
 
-- Halaman beranda menampilkan formulir pemendekan; **tamu tidak perlu masuk** untuk memakainya.
+- Halaman beranda menampilkan formulir pemendekan; **pada mode publik, tamu tidak perlu masuk** untuk memakainya. Pada mode internal (`force_sso` aktif), tamu diarahkan ke Keycloak lebih dulu (middleware `EnsurePublicAccessAllowed`).
 - Input: `destination_url` (wajib, `http`/`https`, maksimal 2048 karakter), `slug` (opsional, pola `^[a-zA-Z0-9][a-zA-Z0-9-_]*$`, maksimal 100, harus unik), `expires_at` (opsional, harus di masa depan), `password` (opsional, minimal 8 karakter).
 - Endpoint `POST /shorten`, dibatasi `throttle:10,1` (10 permintaan per menit per IP).
 - Permintaan JSON menerima `201` berisi `data.slug`, `data.url`, `data.qr`, `data.protected`, `data.expires_at`.
@@ -83,11 +83,13 @@ Batas percobaan kata sandi: 5 kali per tautan, terkunci 60 detik. Setiap percoba
 - **Tautan Pendek**: seluruh tautan, termasuk pembuatan dan perubahan.
 - **Pengguna**: daftar, pembuatan, dan perubahan pengguna (termasuk peran).
 - **Jejak baca-saja**: `Audit Log`, `Click Event`, `Login Audit Log`, `Role Change Log`.
-- **Branding** (`/admin/branding-settings`): nama aplikasi, unggah/hapus logo login, dan tombol **Paksa login Keycloak** (`force_sso`).
+- **Branding** (`/admin/branding-settings`): nama aplikasi, unggah/hapus logo login, dan tombol **Wajib login SSO** (`force_sso`) untuk beralih mode publik/internal.
 - **Pengaturan Waktu** (`/admin/timezone-settings`): zona waktu aplikasi beserta jam berjalan.
 - Dasbor berisi `StatsOverview` dan grafik `ClicksPerDayChart` (memakai warna brand).
 
 ### 3.6 Autentikasi
+
+- **Mode akses ganda.** Satu instalasi bisa dipakai dua cara tanpa ubah kode: mode **publik** (pendaftaran lokal/SSO terbuka, beranda dan API publik bisa dipakai tamu) dan mode **internal** (`force_sso` aktif: tamu diarahkan ke Keycloak sebelum membuka halaman publik). Saklarnya hanya tombol di Branding, dibaca lewat `AccessModeService`.
 
 - **Keycloak (SSO utama)** lewat `laravel/socialite` + `socialiteproviders/keycloak`.
   - `GET /auth/keycloak/redirect` menyimpan `keycloak_state` di sesi, lalu mengarahkan ke Keycloak.
@@ -146,9 +148,10 @@ Aturan: jangan menambah, menaikkan, atau mengubah versi dependensi tanpa diminta
 
 Setiap keputusan di bawah ini mengikat; perubahan harus melalui pengguna lebih dulu.
 
-1. **Satu tombol mode akses publik.** Kunci pengaturan `force_sso` hanya dibaca dan ditulis oleh `AccessModeService`.
-   - `force_sso` aktif → tamu diarahkan ke Keycloak sebelum bisa membuka halaman publik; halaman masuk menampilkan tombol "Login dengan SSO".
-   - `force_sso` nonaktif → beranda publik terbuka dan bisa dipakai tanpa akun; halaman masuk mengarah ke formulir login lokal.
+1. **Satu tombol mode publik/internal.** Kunci pengaturan `force_sso` hanya dibaca dan ditulis oleh `AccessModeService`.
+   - `force_sso` aktif (mode internal) → tamu diarahkan ke Keycloak sebelum bisa membuka halaman publik; halaman masuk menampilkan tombol "Login dengan SSO".
+   - `force_sso` nonaktif (mode publik) → beranda publik terbuka dan bisa dipakai tanpa akun; halaman masuk mengarah ke formulir login lokal.
+   - Keycloak dan SSO tidak dihapus dalam mode apa pun; tombol dan rutenya tetap ada, hanya perilaku tamu yang berubah.
 2. **Tamu boleh memendekkan tautan tanpa akun.** Hasil pemendekan selalu muncul **di bawah** formulir, bukan di halaman terpisah.
 3. **Kartu promosi Bio di beranda tidak memuat tombol masuk.** Tombol "Lanjutkan dengan Keycloak" hanya muncul saat `force_sso` aktif.
 4. **Warna beranda dipertahankan.** Perubahan tampilan tidak boleh mengganti palet yang sudah dipakai; nilai desain diambil dari token.
